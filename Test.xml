@@ -1,0 +1,58 @@
+<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+       xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <!-- Title -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="1" name="Title"/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="100000" y="100000"/>
+            <a:ext cx="8000000" cy="500000"/>
+          </a:xfrm>
+        </p:spPr>
+        <p:txBody>
+          <a:p><a:r><a:t>UiPath Studio: Modular Case Creation & Composition</a:t></a:r></a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Initiation Phase: Trigger Diamond -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="Trigger"/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="100000" y="800000"/>
+            <a:ext cx="1200000" cy="1200000"/>
+          </a:xfrm>
+          <a:prstGeom prst="diamond"/>
+        </p:spPr>
+        <p:txBody>
+          <a:p><a:r><a:t>Windows Patches Pushed?</a:t></a:r></a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Example Process Box -->
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="Open Outlook"/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="3000000" y="1200000"/>
+            <a:ext cx="2000000" cy="800000"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect"/>
+        </p:spPr>
+        <p:txBody>
+          <a:p><a:r><a:t>Open Outlook</a:t></a:r></a:p>
+        </p:txBody>
+      </p:sp>
+
+      <!-- Add more shapes here for Send Email, Receive Email, Forward Email, Teams actions, Assets, Orchestrator, etc. -->
+    </p:spTree>
+  </p:cSld>
+</p:sld>
