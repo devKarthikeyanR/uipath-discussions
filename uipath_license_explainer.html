@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UiPath Unattended License Model Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#101C33;
+    --navy-soft:#324259;
+    --bg:#EEF1F6;
+    --card:#FFFFFF;
+    --border:#E1E5EC;
+    --ink:#141B29;
+    --ink-soft:#5C6879;
+    --ink-faint:#8D96A6;
+
+    --good:#1E9E6D;
+    --good-soft:#E5F6EE;
+    --bad:#B4432E;
+    --bad-soft:#FBEAE6;
+    --neutral-bg:#F7F8FA;
+
+    --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:var(--font-body);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:28px 16px;
+  }
+  .slide{
+    width:100%;
+    max-width:1180px;
+    background:var(--card);
+    border-radius:20px;
+    box-shadow:0 1px 2px rgba(16,20,28,0.04), 0 20px 50px rgba(16,20,28,0.10);
+    overflow:hidden;
+  }
+
+  /* ---------- Header ---------- */
+  .slide-header{
+    background:linear-gradient(135deg, #101C33 0%, #1B2C4A 100%);
+    color:#fff;
+    padding:34px 44px 30px;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,0.55);
+    margin-bottom:10px;
+  }
+  .header-row{display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap;}
+  h1{
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:-0.01em;
+    margin:0;
+    line-height:1.25;
+    max-width:700px;
+  }
+  h1 em{color:#7FD9AE; font-style:normal;}
+  .rec-badge{
+    background:rgba(127,217,174,0.14);
+    border:1px solid rgba(127,217,174,0.4);
+    color:#7FD9AE;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.03em;
+    padding:9px 16px;
+    border-radius:99px;
+    white-space:nowrap;
+  }
+
+  /* ---------- Comparison Table ---------- */
+  .compare{padding:26px 44px 6px;}
+  .compare-grid{
+    display:grid;
+    grid-template-columns:1.35fr 1fr 1fr;
+    border:1px solid var(--border);
+    border-radius:14px;
+    overflow:hidden;
+  }
+  .compare-grid > div{padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center;}
+  .compare-grid > div:nth-child(3n+1){border-right:1px solid var(--border);}
+  .compare-grid > div:nth-child(3n+2){border-right:1px solid var(--border);}
+  .compare-grid > div:nth-last-child(-n+3){border-bottom:none;}
+
+  .col-head{
+    background:var(--card);
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    padding-top:16px !important;
+    padding-bottom:16px !important;
+  }
+  .col-head.good-head{color:var(--good); background:var(--good-soft);}
+  .col-head.bad-head{color:var(--ink-soft); background:var(--neutral-bg);}
+
+  .criteria{font-size:13.5px; font-weight:600; color:var(--ink);}
+  .criteria .sub{display:block; font-weight:400; font-size:11.5px; color:var(--ink-faint); margin-top:2px;}
+
+  .verdict{font-size:12.5px; line-height:1.45;}
+  .verdict.good{background:var(--good-soft);}
+  .verdict.bad{background:#FAFAFB;}
+  .verdict .mark{
+    flex-shrink:0;
+    width:16px; height:16px;
+    border-radius:50%;
+    margin-right:9px;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .verdict.good .mark{background:var(--good); color:#fff;}
+  .verdict.bad .mark{background:#D7DBE2; color:#fff;}
+  .verdict-row{display:flex; align-items:flex-start;}
+  .verdict-text b{color:var(--ink); font-weight:700;}
+
+  /* ---------- Bottom line ---------- */
+  .bottom-line{
+    margin:22px 44px 0;
+    background:#F0F4FA;
+    border:1px solid #D1DFF0;
+    border-radius:14px;
+    padding:18px 22px;
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+  }
+  .bottom-line .icon{
+    width:34px; height:34px; border-radius:10px; background:#295CAA; color:#fff;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .bottom-line-title{font-size:13.5px; font-weight:800; color:#183A70; margin-bottom:3px;}
+  .bottom-line-text{font-size:13px; color:#23477F; line-height:1.55;}
+
+  .footnote{
+    margin:16px 44px 32px;
+    font-size:11.5px;
+    color:var(--ink-faint);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    line-height:1.5;
+  }
+  .footnote svg{flex-shrink:0; margin-top:1px;}
+
+  @media (max-width:760px){
+    .compare-grid{grid-template-columns:1fr;}
+    .compare-grid > div:nth-child(3n+1){border-right:none;}
+    .compare-grid > div:nth-child(3n+2){border-right:none;}
+    .col-head{display:none;}
+    .compare-grid > div{border-bottom:1px solid var(--border) !important;}
+    .criteria{padding-top:16px; font-weight:700;}
+  }
+</style>
+</head>
+<body>
+  <div class="slide">
+
+    <div class="slide-header">
+      <div class="eyebrow">RPA Infrastructure & Licensing</div>
+      <div class="header-row">
+        <h1>How a single <em>Unattended License</em> powers multiple machines</h1>
+        <div class="rec-badge">✓ Highly Cost-Effective</div>
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="compare-grid">
+        <div class="col-head">Concept / Factor</div>
+        <div class="col-head good-head">Our Setup: Sequential (1 License)</div>
+        <div class="col-head bad-head">Alternative: Parallel (Multi-License)</div>
+
+        <div class="criteria">The "Company Car" Analogy
+          <span class="sub">How resources are shared across VMs</span>
+        </div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text">Like having <b>one car but 5 authorized drivers</b> (Virtual Machines). Only one driver can take the car at a time.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text">Buying a <b>separate car</b> for every driver so everyone can drive simultaneously.</span></div>
+        </div>
+
+        <div class="criteria">Execution Behavior
+          <span class="sub">What happens when tasks overlap?</span>
+        </div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text"><b>Queued.</b> If Finance is running on VM A, an HR task triggered on VM B will wait in a queue until the license is released.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text"><b>Simultaneous.</b> Both the Finance task and the HR task execute at the exact same millisecond.</span></div>
+        </div>
+
+        <div class="criteria">UiPath Licensing Cost
+          <span class="sub">Annual recurring software fees</span>
+        </div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text"><b>Maximized ROI.</b> Pay for just <b>one</b> license (~$8,000/yr) that "floats" dynamically to whichever VM needs to do work.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text"><b>Expensive.</b> Cost multiplies linearly (e.g., 3 tasks running at once = ~<b>$24,000/yr</b> in licenses).</span></div>
+        </div>
+
+        <div class="criteria">Machine Setup & Isolation
+          <span class="sub">Where the bots actually live</span>
+        </div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text">We still deploy <b>multiple Virtual Machines</b> for different departments to maintain strict security, data isolation, and distinct logins.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text">Also requires multiple VMs, but each has a dedicated license firmly locked to it.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-line">
+      <div class="icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      </div>
+      <div>
+        <div class="bottom-line-title">The Complete Financial Picture</div>
+        <div class="bottom-line-text">Treat an Unattended Bot like a digital employee. Its cost comes in three parts: <b>1. The Brain</b> (UiPath Unattended License + Orchestrator to manage the waiting queue), <b>2. The Desk</b> (Cloud/Server infrastructure costs for hosting the Virtual Machines), and <b>3. The Tools</b> (App licenses for SAP, Excel, etc.). By pooling our workloads into a sequence, we only pay for one "Brain" while maintaining dedicated "Desks" for security.</div>
+      </div>
+    </div>
+
+    <div class="footnote">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v.01M12 11v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      Scalability note: This setup is highly flexible. If automation adoption grows and task queues become too long, we can simply add a second Unattended license later—no architectural rework required.
+    </div>
+
+  </div>
+</body>
+</html>
