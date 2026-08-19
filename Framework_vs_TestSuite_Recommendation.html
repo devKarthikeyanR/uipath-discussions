@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Custom Framework vs. UiPath Test Suite — Recommendation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --navy:#101C33;
+    --navy-soft:#324259;
+    --bg:#EEF1F6;
+    --card:#FFFFFF;
+    --border:#E1E5EC;
+    --ink:#141B29;
+    --ink-soft:#5C6879;
+    --ink-faint:#8D96A6;
+
+    --good:#1E9E6D;
+    --good-soft:#E5F6EE;
+    --bad:#B4432E;
+    --bad-soft:#FBEAE6;
+
+    --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:var(--font-body);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:28px 16px;
+  }
+  .slide{
+    width:100%;
+    max-width:1180px;
+    background:var(--card);
+    border-radius:20px;
+    box-shadow:0 1px 2px rgba(16,20,28,0.04), 0 20px 50px rgba(16,20,28,0.10);
+    overflow:hidden;
+  }
+
+  /* ---------- Header ---------- */
+  .slide-header{
+    background:linear-gradient(135deg, #101C33 0%, #1B2C4A 100%);
+    color:#fff;
+    padding:34px 44px 30px;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:rgba(255,255,255,0.55);
+    margin-bottom:10px;
+  }
+  .header-row{display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap;}
+  h1{
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:-0.01em;
+    margin:0;
+    line-height:1.25;
+    max-width:640px;
+  }
+  h1 em{color:#7FD9AE; font-style:normal;}
+  .rec-badge{
+    background:rgba(127,217,174,0.14);
+    border:1px solid rgba(127,217,174,0.4);
+    color:#7FD9AE;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.03em;
+    padding:9px 16px;
+    border-radius:99px;
+    white-space:nowrap;
+  }
+
+  /* ---------- Comparison Table ---------- */
+  .compare{padding:26px 44px 6px;}
+  .compare-grid{
+    display:grid;
+    grid-template-columns:1.35fr 1fr 1fr;
+    border:1px solid var(--border);
+    border-radius:14px;
+    overflow:hidden;
+  }
+  .compare-grid > div{padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center;}
+  .compare-grid > div:nth-child(3n+1){border-right:1px solid var(--border);}
+  .compare-grid > div:nth-child(3n+2){border-right:1px solid var(--border);}
+  .compare-grid > div:nth-last-child(-n+3){border-bottom:none;}
+
+  .col-head{
+    background:var(--card);
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    padding-top:16px !important;
+    padding-bottom:16px !important;
+  }
+  .col-head.good-head{color:var(--good); background:var(--good-soft);}
+  .col-head.bad-head{color:var(--ink-soft); background:#F7F8FA;}
+
+  .criteria{font-size:13.5px; font-weight:600; color:var(--ink);}
+  .criteria .sub{display:block; font-weight:400; font-size:11.5px; color:var(--ink-faint); margin-top:2px;}
+
+  .verdict{font-size:12.5px; line-height:1.45;}
+  .verdict.good{background:var(--good-soft);}
+  .verdict.bad{background:#FAFAFB;}
+  .verdict .mark{
+    flex-shrink:0;
+    width:16px; height:16px;
+    border-radius:50%;
+    margin-right:9px;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .verdict.good .mark{background:var(--good); color:#fff;}
+  .verdict.bad .mark{background:#D7DBE2; color:#fff;}
+  .verdict-row{display:flex; align-items:flex-start;}
+  .verdict-text b{color:var(--ink); font-weight:700;}
+
+  /* ---------- Bottom line ---------- */
+  .bottom-line{
+    margin:22px 44px 0;
+    background:var(--good-soft);
+    border:1px solid #BFE7D5;
+    border-radius:14px;
+    padding:18px 22px;
+    display:flex;
+    gap:16px;
+    align-items:flex-start;
+  }
+  .bottom-line .icon{
+    width:34px; height:34px; border-radius:10px; background:var(--good); color:#fff;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .bottom-line-title{font-size:13.5px; font-weight:800; color:#0E6B48; margin-bottom:3px;}
+  .bottom-line-text{font-size:13px; color:#215A44; line-height:1.55;}
+
+  .footnote{
+    margin:16px 44px 32px;
+    font-size:11.5px;
+    color:var(--ink-faint);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    line-height:1.5;
+  }
+  .footnote svg{flex-shrink:0; margin-top:1px;}
+
+  @media (max-width:760px){
+    .compare-grid{grid-template-columns:1fr;}
+    .compare-grid > div:nth-child(3n+1){border-right:none;}
+    .compare-grid > div:nth-child(3n+2){border-right:none;}
+    .col-head{display:none;}
+    .compare-grid > div{border-bottom:1px solid var(--border) !important;}
+    .criteria{padding-top:16px; font-weight:700;}
+  }
+</style>
+</head>
+<body>
+  <div class="slide">
+
+    <div class="slide-header">
+      <div class="eyebrow">Automation Architecture Decision</div>
+      <div class="header-row">
+        <h1>Why we're building a <em>Custom Framework</em> — not UiPath Test Suite</h1>
+        <div class="rec-badge">✓ Recommended: Custom Framework</div>
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="compare-grid">
+        <div class="col-head">Decision Factor</div>
+        <div class="col-head good-head">Custom Framework</div>
+        <div class="col-head bad-head">UiPath Test Suite</div>
+
+        <div class="criteria">Business team can add new apps/checks
+          <span class="sub">without automation training</span>
+        </div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text">Yes — <b>just edit an Excel sheet</b>, no coding or tooling knowledge needed.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text">No — test cases are built and maintained by the <b>automation/QA team only</b>.</span></div>
+        </div>
+
+        <div class="criteria">Report looks the way we want
+          <span class="sub">app + step breakdown, our branding</span>
+        </div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text"><b>Fully custom</b> — built exactly to the report design we already agreed on.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text">Comes with its <b>own fixed dashboards</b>, built for QA teams — not this report.</span></div>
+        </div>
+
+        <div class="criteria">Additional cost
+          <span class="sub">licensing / tooling spend</span>
+        </div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text"><b>$0 extra</b> — uses the UiPath licenses we already own.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text">Requires a <b>separate Test Suite license</b> on top of what we have.</span></div>
+        </div>
+
+        <div class="criteria">Built for this specific job
+          <span class="sub">a quick post-patch health check</span>
+        </div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text"><b>Purpose-built</b> for a fast, repeatable "is everything still working" check.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text">Designed for <b>formal QA regression suites</b> tied to defect-tracking tools — a different job than ours.</span></div>
+        </div>
+
+        <div class="criteria">Time to get up and running</div>
+        <div class="verdict good">
+          <div class="verdict-row"><span class="mark">✓</span><span class="verdict-text"><b>Faster</b> — nothing new to procure, install, or learn.</span></div>
+        </div>
+        <div class="verdict bad">
+          <div class="verdict-row"><span class="mark">–</span><span class="verdict-text"><b>Slower</b> — procurement approval plus a learning curve for the team.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-line">
+      <div class="icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7l8-4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="bottom-line-title">Bottom line</div>
+        <div class="bottom-line-text">Same outcome — full post-patch confidence across every app — at <b>lower cost</b>, <b>faster delivery</b>, and with a report that <b>looks and works exactly how the business asked for it</b>. Test Suite is the right tool for a different job: formal QA teams running structured regression tests with defect tracking. That's not what this is.</div>
+      </div>
+    </div>
+
+    <div class="footnote">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v.01M12 11v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      This isn't a one-way door — if we later build a full enterprise QA program with defect tracking, Test Suite can be added on top without redoing this work.
+    </div>
+
+  </div>
+</body>
+</html>
