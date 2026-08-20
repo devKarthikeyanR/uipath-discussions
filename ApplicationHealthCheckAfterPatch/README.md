@@ -4,7 +4,7 @@
 ## Application Health Check After Patch
 
 Runs on a dedicated, always-on-SSO test machine after a Windows patch. For each enabled
-application in `Config\Config.xlsx` ("Applications" sheet), launches the app and runs its
+application in `Config\Applications.xlsx` ("Applications" sheet), launches the app and runs its
 scenario sheet (e.g. `TC_Outlook`), verifying real user operations still work post-patch
 (send email, receive email, attachments). One app failing does not stop the others — each
 is isolated in its own Try/Catch/Finally. Produces a holistic per-app summary email (every
@@ -12,15 +12,30 @@ scenario listed, pass or fail) plus a master HTML report across all apps, saved 
 `<RunFolderRoot>\<yyyyMMdd>\Run_<HHmmss>\Configs|Evidence|Reports`.
 
 This is a **tabular-mode** REFramework: `GetTransactionData.xaml` reads one row per enabled
-application from `Config\Config.xlsx` instead of an Orchestrator queue — there is no queue
+application from `Config\Applications.xlsx` instead of an Orchestrator queue — there is no queue
 to configure. Trigger is adhoc only (Orchestrator "Start Job"); no scheduling is wired up.
 
-**Config schema** (`Config\Config.xlsx`, rebuild via `Config\BuildConfigWorkbook.ps1` if changed):
-- `Applications`: AppID, AppName, ExePath, LaunchArgs, Enabled, MaxRetries, TimeoutSec, CleanupMode, NotifyEmail
-- `TC_<AppName>` (one per app, e.g. `TC_Outlook`): ScenarioID, ScenarioName, Enabled, Operation,
-  CorrelatesWithScenarioID, InputData, TargetRecipient, AttachmentSourcePath, SelectorHint,
-  TimeoutSec, PollIntervalSec, RetryCount, RetryOnTimeoutOnly, Priority
-- `GlobalConfig`: RunFolderRoot, DefaultReportRecipients, DefaultCleanupMode, DefaultNotifyEmail, TriggerMode
+**Config schema** — split across two workbooks:
+
+- `Config\Applications.xlsx` (rebuild via `Config\BuildApplicationsWorkbook.ps1` if changed) —
+  the applications list and their operations:
+  - `Applications`: AppID, AppName, ExePath, LaunchArgs, Enabled, MaxRetries, TimeoutSec, CleanupMode, NotifyEmail
+  - `TC_<AppName>` (one per app, e.g. `TC_Outlook`; future apps add their own `TC_<AppName>` sheet here):
+    ScenarioID, ScenarioName, Enabled, Operation, CorrelatesWithScenarioID, InputData, TargetRecipient,
+    AttachmentSourcePath, SelectorHint, TimeoutSec, PollIntervalSec, RetryCount, RetryOnTimeoutOnly, Priority
+- `Config\Config.xlsx` (rebuild via `Config\BuildConfigWorkbook.ps1` if changed) — pure
+  framework/run settings:
+  - `GlobalConfig`: RunFolderRoot, DefaultReportRecipients, DefaultCleanupMode, DefaultNotifyEmail, TriggerMode
+
+`InitAllApplications.xaml` loads `GlobalConfig` from `Config\Config.xlsx`, stores both workbook
+paths in the `Config` dictionary (`GlobalConfigWorkbook`, `AppConfigWorkbook`), and snapshots
+both files into the run folder's `Configs` subfolder. `GetTransactionData.xaml` and `Process.xaml`
+read the `Applications` / `TC_<AppName>` sheets via `in_Config["AppConfigWorkbook"]`, so they need
+no further changes when the workbook path changes.
+
+Note: the stock REFramework settings file `Data\Config.xlsx` (`Settings`/`Constants`/`Assets`
+sheets, loaded by `InitAllSettings.xaml`) is a separate, unrelated workbook — it is not part of
+this split.
 
 Send/Verify scenario pairs are matched with a correlation token (`HC-{RunID}-{AppID}-{ScenarioID}-{timestamp}`)
 embedded in the email subject on send, and polled for on the paired verify step (`Get Text` /
