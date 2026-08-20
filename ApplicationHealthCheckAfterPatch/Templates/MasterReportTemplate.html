@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Application Health Check — Master Report</title>
+<style>
+  body { font-family: Segoe UI, Arial, sans-serif; color: #222; }
+  h1 { font-size: 20px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 13px; }
+  th { background-color: #eeeeee; }
+  .pass { color: #1a7a1a; font-weight: bold; }
+  .fail { color: #b00020; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>Application Health Check — Master Report</h1>
+  <p>Run ID: {{RUN_ID}} &nbsp;|&nbsp; Generated: {{TIMESTAMP}}</p>
+  <table>
+    <tr><th>App ID</th><th>App Name</th><th>Status</th><th>Scenarios Passed</th><th>Scenarios Failed</th><th>Total Scenarios</th></tr>
+    {{APP_ROWS}}
+  </table>
+</body>
+</html>

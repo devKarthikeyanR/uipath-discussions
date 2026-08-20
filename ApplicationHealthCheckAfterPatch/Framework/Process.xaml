@@ -1,0 +1,1290 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:uic="clr-namespace:UiPath.Core.Activities;assembly=UiPath.System.Activities" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property sap2010:Annotation.AnnotationText="Transaction item to be processed — one row of the Applications sheet." Name="in_TransactionItem" Type="InArgument(x:Object)" />
+    <x:Property sap2010:Annotation.AnnotationText="Dictionary structure to store configuration data of the process (settings, constants and assets)." Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+  </x:Members>
+  <sap2010:ExpressionActivityEditor.ExpressionActivityEditor>C#</sap2010:ExpressionActivityEditor.ExpressionActivityEditor>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.DynamicUpdate</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Linq.Expressions</x:String>
+      <x:String>System.Runtime.InteropServices</x:String>
+      <x:String>System.Runtime.Serialization</x:String>
+      <x:String>System.Text</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.Bcl.AsyncInterfaces</AssemblyReference>
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.Composition</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Memory</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.ServiceModel.Activities</AssemblyReference>
+      <AssemblyReference>System.ValueTuple</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>UiPath.CV</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.OCR.Activities.Design</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationCore</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence sap2010:Annotation.AnnotationText="Runs the full scenario loop for one application row from the Applications sheet: launch app, dispatch every enabled TC_&lt;AppName&gt; scenario (SendEmail / VerifyReceive / VerifyReceiveAttachment), build+send the per-app holistic summary email, then close/clean up. Per-app Try/Catch/Finally ensures one app's crash never stops the others." DisplayName="Process">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataRow" Name="AppRow" />
+      <Variable x:TypeArguments="x:String" Name="AppID" />
+      <Variable x:TypeArguments="x:String" Name="AppName" />
+      <Variable x:TypeArguments="x:String" Name="ExePath" />
+      <Variable x:TypeArguments="x:String" Name="CleanupMode" />
+      <Variable x:TypeArguments="x:String" Name="NotifyEmail" />
+      <Variable x:TypeArguments="x:String" Name="AppConfigWorkbook" />
+      <Variable x:TypeArguments="x:Int32" Name="MaxRetries" />
+      <Variable x:TypeArguments="x:Int32" Name="TimeoutSec" />
+      <Variable x:TypeArguments="x:String" Name="RunID" />
+      <Variable x:TypeArguments="x:String" Name="ReportsFolder" />
+      <Variable x:TypeArguments="sd:DataTable" Name="ScenarioResults" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Name="ScenarioTokens" />
+      <Variable x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)" Name="SendRowsByScenarioID" />
+      <Variable x:TypeArguments="x:String" Name="AppStatus" Default="&quot;PASS&quot;" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtScenarios" />
+      <Variable x:TypeArguments="x:Boolean" Name="AppLaunched" Default="False" />
+      <Variable x:TypeArguments="sd:DataTable" Name="AppResultsTable" />
+    </Sequence.Variables>
+    <Assign DisplayName="Assign AppRow">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataRow">
+          <CSharpReference x:TypeArguments="sd:DataRow">AppRow</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataRow">
+          <CSharpValue x:TypeArguments="sd:DataRow">(DataRow)in_TransactionItem</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign AppID">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">AppID</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">AppRow["AppID"].ToString().Trim()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign AppName">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">AppName</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">AppRow["AppName"].ToString().Trim()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign ExePath">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">ExePath</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">AppRow["ExePath"].ToString().Trim()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign CleanupMode">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">CleanupMode</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">AppRow["CleanupMode"].ToString().Trim()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign NotifyEmail">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">NotifyEmail</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">AppRow["NotifyEmail"].ToString().Trim()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign MaxRetries">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">
+          <CSharpReference x:TypeArguments="x:Int32">MaxRetries</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">
+          <CSharpValue x:TypeArguments="x:Int32">Int32.Parse(AppRow["MaxRetries"].ToString())</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign TimeoutSec">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">
+          <CSharpReference x:TypeArguments="x:Int32">TimeoutSec</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">
+          <CSharpValue x:TypeArguments="x:Int32">Int32.Parse(AppRow["TimeoutSec"].ToString())</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign AppConfigWorkbook">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">AppConfigWorkbook</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">in_Config["AppConfigWorkbook"].ToString()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign RunID">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">RunID</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">in_Config["RunID"].ToString()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign ReportsFolder">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">ReportsFolder</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">in_Config["ReportsFolder"].ToString()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <uic:GenerateDataTable DisplayName="Generate Data Table (ScenarioResults header)" AutoDetectTypes="True" UseColumnHeader="True" CSVParsing="True">
+      <uic:GenerateDataTable.Input>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">"ScenarioID,ScenarioName,Operation,Status,Details"</CSharpValue>
+        </InArgument>
+      </uic:GenerateDataTable.Input>
+      <uic:GenerateDataTable.DataTable>
+        <OutArgument x:TypeArguments="sd:DataTable">
+          <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+        </OutArgument>
+      </uic:GenerateDataTable.DataTable>
+    </uic:GenerateDataTable>
+    <Assign DisplayName="Assign ScenarioTokens (new)">
+      <Assign.To>
+        <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">
+          <CSharpReference x:TypeArguments="scg:Dictionary(x:String, x:String)">ScenarioTokens</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">
+          <CSharpValue x:TypeArguments="scg:Dictionary(x:String, x:String)">new Dictionary&lt;string, string&gt;()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign SendRowsByScenarioID (new)">
+      <Assign.To>
+        <OutArgument x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)">
+          <CSharpReference x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)">SendRowsByScenarioID</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)">
+          <CSharpValue x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)">new Dictionary&lt;string, DataRow&gt;()</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log Message (starting app health check)" Level="Info">
+      <ui:LogMessage.Message>
+        <InArgument x:TypeArguments="x:Object">
+          <CSharpValue x:TypeArguments="x:Object">"Starting health check for " + AppName + " (" + AppID + ")"</CSharpValue>
+        </InArgument>
+      </ui:LogMessage.Message>
+    </ui:LogMessage>
+    <TryCatch DisplayName="Try process this application">
+      <TryCatch.Try>
+        <Sequence DisplayName="Try">
+          <Switch x:TypeArguments="x:String" DisplayName="Switch on AppName" Expression="AppName">
+            <Sequence x:Key="Outlook" DisplayName="Outlook">
+              <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_Launch workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_Launch.xaml">
+                <ui:InvokeWorkflowFile.Arguments>
+                  <scg:Dictionary x:TypeArguments="x:String, Argument">
+                    <InArgument x:TypeArguments="x:String" x:Key="in_ExePath">
+                      <CSharpValue x:TypeArguments="x:String">ExePath</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                      <CSharpValue x:TypeArguments="x:Int32">TimeoutSec</CSharpValue>
+                    </InArgument>
+                  </scg:Dictionary>
+                </ui:InvokeWorkflowFile.Arguments>
+              </ui:InvokeWorkflowFile>
+              <Assign DisplayName="Assign AppLaunched">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:Boolean">
+                    <CSharpReference x:TypeArguments="x:Boolean">AppLaunched</CSharpReference>
+                  </OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:Boolean">
+                    <CSharpValue x:TypeArguments="x:Boolean">true</CSharpValue>
+                  </InArgument>
+                </Assign.Value>
+              </Assign>
+              <ui:ReadRange Range="{x:Null}" WorkbookPathResource="{x:Null}" AddHeaders="True" DisplayName="Read range (TC_&lt;AppName&gt; sheet)">
+                <ui:ReadRange.DataTable>
+                  <OutArgument x:TypeArguments="sd:DataTable">
+                    <CSharpReference x:TypeArguments="sd:DataTable">dtScenarios</CSharpReference>
+                  </OutArgument>
+                </ui:ReadRange.DataTable>
+                <ui:ReadRange.SheetName>
+                  <InArgument x:TypeArguments="x:String">
+                    <CSharpValue x:TypeArguments="x:String">"TC_" + AppName</CSharpValue>
+                  </InArgument>
+                </ui:ReadRange.SheetName>
+                <ui:ReadRange.WorkbookPath>
+                  <InArgument x:TypeArguments="x:String">
+                    <CSharpValue x:TypeArguments="x:String">AppConfigWorkbook</CSharpValue>
+                  </InArgument>
+                </ui:ReadRange.WorkbookPath>
+              </ui:ReadRange>
+              <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DisplayName="For each scenario row">
+                <ui:ForEachRow.Body>
+                  <ActivityAction x:TypeArguments="sd:DataRow">
+                    <ActivityAction.Argument>
+                      <DelegateInArgument x:TypeArguments="sd:DataRow" Name="ScenarioRow" />
+                    </ActivityAction.Argument>
+                    <Sequence DisplayName="Body">
+                      <If DisplayName="If scenario is enabled">
+                        <If.Condition>
+                          <InArgument x:TypeArguments="x:Boolean">
+                            <CSharpValue x:TypeArguments="x:Boolean">ScenarioRow["Enabled"].ToString().Trim().ToUpper() == "Y"</CSharpValue>
+                          </InArgument>
+                        </If.Condition>
+                        <If.Then>
+                          <Sequence DisplayName="Then">
+                            <Sequence.Variables>
+                              <Variable x:TypeArguments="x:String" Name="ScenarioID" />
+                              <Variable x:TypeArguments="x:String" Name="ScenarioName" />
+                              <Variable x:TypeArguments="x:String" Name="Operation" />
+                              <Variable x:TypeArguments="x:String" Name="CorrelatesWithScenarioID" />
+                              <Variable x:TypeArguments="x:String" Name="InputData" />
+                              <Variable x:TypeArguments="x:String" Name="TargetRecipient" />
+                              <Variable x:TypeArguments="x:String" Name="AttachmentSourcePath" />
+                              <Variable x:TypeArguments="x:Int32" Name="ScenarioTimeoutSec" />
+                              <Variable x:TypeArguments="x:Int32" Name="PollIntervalSec" />
+                              <Variable x:TypeArguments="x:Int32" Name="RetryCount" />
+                              <Variable x:TypeArguments="x:String" Name="RetryOnTimeoutOnly" />
+                              <Variable x:TypeArguments="x:String" Name="Token" />
+                              <Variable x:TypeArguments="x:Boolean" Name="Found" Default="False" />
+                              <Variable x:TypeArguments="x:String" Name="MatchedSubject" Default="&quot;&quot;" />
+                              <Variable x:TypeArguments="x:Int32" Name="RetriesLeft" />
+                              <Variable x:TypeArguments="x:String" Name="ExpectedToken" Default="&quot;&quot;" />
+                            </Sequence.Variables>
+                            <Assign DisplayName="Assign scenario fields">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:String">
+                                  <CSharpReference x:TypeArguments="x:String">ScenarioID</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["ScenarioID"].ToString().Trim()</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign ScenarioName">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:String">
+                                  <CSharpReference x:TypeArguments="x:String">ScenarioName</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["ScenarioName"].ToString().Trim()</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign Operation">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:String">
+                                  <CSharpReference x:TypeArguments="x:String">Operation</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["Operation"].ToString().Trim()</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign CorrelatesWithScenarioID">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:String">
+                                  <CSharpReference x:TypeArguments="x:String">CorrelatesWithScenarioID</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["CorrelatesWithScenarioID"].ToString().Trim()</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign InputData">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:String">
+                                  <CSharpReference x:TypeArguments="x:String">InputData</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["InputData"].ToString()</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign TargetRecipient">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:String">
+                                  <CSharpReference x:TypeArguments="x:String">TargetRecipient</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["TargetRecipient"].ToString().Trim().ToLower() == "self" ? NotifyEmail : ScenarioRow["TargetRecipient"].ToString().Trim()</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign AttachmentSourcePath">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:String">
+                                  <CSharpReference x:TypeArguments="x:String">AttachmentSourcePath</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["AttachmentSourcePath"].ToString().Trim()</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign ScenarioTimeoutSec">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:Int32">
+                                  <CSharpReference x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:Int32">
+                                  <CSharpValue x:TypeArguments="x:Int32">Int32.Parse(ScenarioRow["TimeoutSec"].ToString())</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign PollIntervalSec">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:Int32">
+                                  <CSharpReference x:TypeArguments="x:Int32">PollIntervalSec</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:Int32">
+                                  <CSharpValue x:TypeArguments="x:Int32">string.IsNullOrWhiteSpace(ScenarioRow["PollIntervalSec"].ToString()) ? 10 : Int32.Parse(ScenarioRow["PollIntervalSec"].ToString())</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign RetryCount">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:Int32">
+                                  <CSharpReference x:TypeArguments="x:Int32">RetryCount</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:Int32">
+                                  <CSharpValue x:TypeArguments="x:Int32">string.IsNullOrWhiteSpace(ScenarioRow["RetryCount"].ToString()) ? 0 : Int32.Parse(ScenarioRow["RetryCount"].ToString())</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="Assign RetryOnTimeoutOnly">
+                              <Assign.To>
+                                <OutArgument x:TypeArguments="x:String">
+                                  <CSharpReference x:TypeArguments="x:String">RetryOnTimeoutOnly</CSharpReference>
+                                </OutArgument>
+                              </Assign.To>
+                              <Assign.Value>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["RetryOnTimeoutOnly"].ToString().Trim()</CSharpValue>
+                                </InArgument>
+                              </Assign.Value>
+                            </Assign>
+                            <TryCatch DisplayName="Try this scenario">
+                              <TryCatch.Try>
+                                <Sequence DisplayName="Try">
+                                  <Switch x:TypeArguments="x:String" DisplayName="Switch on Operation" Expression="Operation">
+                                    <Sequence x:Key="SendEmail" DisplayName="SendEmail">
+                                      <Assign DisplayName="Assign Token">
+                                        <Assign.To>
+                                          <OutArgument x:TypeArguments="x:String">
+                                            <CSharpReference x:TypeArguments="x:String">Token</CSharpReference>
+                                          </OutArgument>
+                                        </Assign.To>
+                                        <Assign.Value>
+                                          <InArgument x:TypeArguments="x:String">
+                                            <CSharpValue x:TypeArguments="x:String">"HC-" + RunID + "-" + AppID + "-" + ScenarioID + "-" + DateTime.Now.ToString("yyyyMMddHHmmss")</CSharpValue>
+                                          </InArgument>
+                                        </Assign.Value>
+                                      </Assign>
+                                      <Assign DisplayName="Store token by ScenarioID">
+                                        <Assign.To>
+                                          <OutArgument x:TypeArguments="x:String">
+                                            <CSharpReference x:TypeArguments="x:String">ScenarioTokens[ScenarioID]</CSharpReference>
+                                          </OutArgument>
+                                        </Assign.To>
+                                        <Assign.Value>
+                                          <InArgument x:TypeArguments="x:String">
+                                            <CSharpValue x:TypeArguments="x:String">Token</CSharpValue>
+                                          </InArgument>
+                                        </Assign.Value>
+                                      </Assign>
+                                      <Assign DisplayName="Store scenario row by ScenarioID">
+                                        <Assign.To>
+                                          <OutArgument x:TypeArguments="sd:DataRow">
+                                            <CSharpReference x:TypeArguments="sd:DataRow">SendRowsByScenarioID[ScenarioID]</CSharpReference>
+                                          </OutArgument>
+                                        </Assign.To>
+                                        <Assign.Value>
+                                          <InArgument x:TypeArguments="sd:DataRow">
+                                            <CSharpValue x:TypeArguments="sd:DataRow">ScenarioRow</CSharpValue>
+                                          </InArgument>
+                                        </Assign.Value>
+                                      </Assign>
+                                      <If DisplayName="If no attachment">
+                                        <If.Condition>
+                                          <InArgument x:TypeArguments="x:Boolean">
+                                            <CSharpValue x:TypeArguments="x:Boolean">string.IsNullOrWhiteSpace(AttachmentSourcePath)</CSharpValue>
+                                          </InArgument>
+                                        </If.Condition>
+                                        <If.Then>
+                                          <Sequence DisplayName="Then">
+                                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_SendEmail workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_SendEmail.xaml">
+                                              <ui:InvokeWorkflowFile.Arguments>
+                                                <scg:Dictionary x:TypeArguments="x:String, Argument">
+                                                  <InArgument x:TypeArguments="x:String" x:Key="in_TargetRecipient">
+                                                    <CSharpValue x:TypeArguments="x:String">TargetRecipient</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
+                                                    <CSharpValue x:TypeArguments="x:String">InputData.Replace("{token}", Token)</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:String" x:Key="in_Body">
+                                                    <CSharpValue x:TypeArguments="x:String">"Application Health Check test email. Correlation token: " + Token</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                                                    <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
+                                                  </InArgument>
+                                                </scg:Dictionary>
+                                              </ui:InvokeWorkflowFile.Arguments>
+                                            </ui:InvokeWorkflowFile>
+                                          </Sequence>
+                                        </If.Then>
+                                        <If.Else>
+                                          <Sequence DisplayName="Else">
+                                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_AddAttachment workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_AddAttachment.xaml">
+                                              <ui:InvokeWorkflowFile.Arguments>
+                                                <scg:Dictionary x:TypeArguments="x:String, Argument">
+                                                  <InArgument x:TypeArguments="x:String" x:Key="in_TargetRecipient">
+                                                    <CSharpValue x:TypeArguments="x:String">TargetRecipient</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
+                                                    <CSharpValue x:TypeArguments="x:String">InputData.Replace("{token}", Token)</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:String" x:Key="in_Body">
+                                                    <CSharpValue x:TypeArguments="x:String">"Application Health Check test email with attachment. Correlation token: " + Token</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:String" x:Key="in_AttachmentPath">
+                                                    <CSharpValue x:TypeArguments="x:String">AttachmentSourcePath</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                                                    <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
+                                                  </InArgument>
+                                                </scg:Dictionary>
+                                              </ui:InvokeWorkflowFile.Arguments>
+                                            </ui:InvokeWorkflowFile>
+                                          </Sequence>
+                                        </If.Else>
+                                      </If>
+                                      <uic:AddDataRow DisplayName="Add Data Row (SendEmail result)">
+                                        <uic:AddDataRow.DataTable>
+                                          <InOutArgument x:TypeArguments="sd:DataTable">
+                                            <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+                                          </InOutArgument>
+                                        </uic:AddDataRow.DataTable>
+                                        <uic:AddDataRow.ArrayRow>
+                                          <InArgument x:TypeArguments="s:Object[]">
+                                            <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Pass", "Sent with token " + Token }</CSharpValue>
+                                          </InArgument>
+                                        </uic:AddDataRow.ArrayRow>
+                                      </uic:AddDataRow>
+                                    </Sequence>
+                                    <Sequence x:Key="VerifyReceive" DisplayName="VerifyReceive">
+                                      <Assign DisplayName="Assign ExpectedToken">
+                                        <Assign.To>
+                                          <OutArgument x:TypeArguments="x:String">
+                                            <CSharpReference x:TypeArguments="x:String">ExpectedToken</CSharpReference>
+                                          </OutArgument>
+                                        </Assign.To>
+                                        <Assign.Value>
+                                          <InArgument x:TypeArguments="x:String">
+                                            <CSharpValue x:TypeArguments="x:String">ScenarioTokens.ContainsKey(CorrelatesWithScenarioID) ? ScenarioTokens[CorrelatesWithScenarioID] : ""</CSharpValue>
+                                          </InArgument>
+                                        </Assign.Value>
+                                      </Assign>
+                                      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_VerifyReceive workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_VerifyReceive.xaml">
+                                        <ui:InvokeWorkflowFile.Arguments>
+                                          <scg:Dictionary x:TypeArguments="x:String, Argument">
+                                            <InArgument x:TypeArguments="x:String" x:Key="in_CorrelationToken">
+                                              <CSharpValue x:TypeArguments="x:String">ExpectedToken</CSharpValue>
+                                            </InArgument>
+                                            <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                                              <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
+                                            </InArgument>
+                                            <InArgument x:TypeArguments="x:Int32" x:Key="in_PollIntervalSec">
+                                              <CSharpValue x:TypeArguments="x:Int32">PollIntervalSec</CSharpValue>
+                                            </InArgument>
+                                            <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Found">
+                                              <CSharpReference x:TypeArguments="x:Boolean">Found</CSharpReference>
+                                            </OutArgument>
+                                            <OutArgument x:TypeArguments="x:String" x:Key="out_MatchedSubject">
+                                              <CSharpReference x:TypeArguments="x:String">MatchedSubject</CSharpReference>
+                                            </OutArgument>
+                                          </scg:Dictionary>
+                                        </ui:InvokeWorkflowFile.Arguments>
+                                      </ui:InvokeWorkflowFile>
+                                      <Assign DisplayName="Assign RetriesLeft">
+                                        <Assign.To>
+                                          <OutArgument x:TypeArguments="x:Int32">
+                                            <CSharpReference x:TypeArguments="x:Int32">RetriesLeft</CSharpReference>
+                                          </OutArgument>
+                                        </Assign.To>
+                                        <Assign.Value>
+                                          <InArgument x:TypeArguments="x:Int32">
+                                            <CSharpValue x:TypeArguments="x:Int32">RetryCount</CSharpValue>
+                                          </InArgument>
+                                        </Assign.Value>
+                                      </Assign>
+                                      <ui:InterruptibleWhile DisplayName="Retry Send+Verify pair on timeout" sap2010:Annotation.AnnotationText="If RetryOnTimeoutOnly=Y and RetryCount&gt;0 and the verify step timed out (not a hard UI error, which is handled by the outer Catch instead), regenerate the token, resend, and re-poll — decrementing RetryCount each attempt.">
+                                        <ui:InterruptibleWhile.Condition>
+                                          <CSharpValue x:TypeArguments="x:Boolean">!Found &amp;&amp; RetryOnTimeoutOnly.ToUpper() == "Y" &amp;&amp; RetriesLeft &gt; 0 &amp;&amp; SendRowsByScenarioID.ContainsKey(CorrelatesWithScenarioID)</CSharpValue>
+                                        </ui:InterruptibleWhile.Condition>
+                                        <ui:InterruptibleWhile.Body>
+                                          <Sequence DisplayName="Body">
+                                            <Sequence.Variables>
+                                              <Variable x:TypeArguments="sd:DataRow" Name="OriginalSendRow" />
+                                            </Sequence.Variables>
+                                            <Assign DisplayName="Assign OriginalSendRow">
+                                              <Assign.To>
+                                                <OutArgument x:TypeArguments="sd:DataRow">
+                                                  <CSharpReference x:TypeArguments="sd:DataRow">OriginalSendRow</CSharpReference>
+                                                </OutArgument>
+                                              </Assign.To>
+                                              <Assign.Value>
+                                                <InArgument x:TypeArguments="sd:DataRow">
+                                                  <CSharpValue x:TypeArguments="sd:DataRow">SendRowsByScenarioID[CorrelatesWithScenarioID]</CSharpValue>
+                                                </InArgument>
+                                              </Assign.Value>
+                                            </Assign>
+                                            <Assign DisplayName="Regenerate Token">
+                                              <Assign.To>
+                                                <OutArgument x:TypeArguments="x:String">
+                                                  <CSharpReference x:TypeArguments="x:String">ExpectedToken</CSharpReference>
+                                                </OutArgument>
+                                              </Assign.To>
+                                              <Assign.Value>
+                                                <InArgument x:TypeArguments="x:String">
+                                                  <CSharpValue x:TypeArguments="x:String">"HC-" + RunID + "-" + AppID + "-" + CorrelatesWithScenarioID + "-" + DateTime.Now.ToString("yyyyMMddHHmmss")</CSharpValue>
+                                                </InArgument>
+                                              </Assign.Value>
+                                            </Assign>
+                                            <Assign DisplayName="Update stored token">
+                                              <Assign.To>
+                                                <OutArgument x:TypeArguments="x:String">
+                                                  <CSharpReference x:TypeArguments="x:String">ScenarioTokens[CorrelatesWithScenarioID]</CSharpReference>
+                                                </OutArgument>
+                                              </Assign.To>
+                                              <Assign.Value>
+                                                <InArgument x:TypeArguments="x:String">
+                                                  <CSharpValue x:TypeArguments="x:String">ExpectedToken</CSharpValue>
+                                                </InArgument>
+                                              </Assign.Value>
+                                            </Assign>
+                                            <If DisplayName="If original send had no attachment">
+                                              <If.Condition>
+                                                <InArgument x:TypeArguments="x:Boolean">
+                                                  <CSharpValue x:TypeArguments="x:Boolean">string.IsNullOrWhiteSpace(OriginalSendRow["AttachmentSourcePath"].ToString())</CSharpValue>
+                                                </InArgument>
+                                              </If.Condition>
+                                              <If.Then>
+                                                <Sequence DisplayName="Then">
+                                                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_SendEmail workflow (retry)" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_SendEmail.xaml">
+                                                    <ui:InvokeWorkflowFile.Arguments>
+                                                      <scg:Dictionary x:TypeArguments="x:String, Argument">
+                                                        <InArgument x:TypeArguments="x:String" x:Key="in_TargetRecipient">
+                                                          <CSharpValue x:TypeArguments="x:String">TargetRecipient</CSharpValue>
+                                                        </InArgument>
+                                                        <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
+                                                          <CSharpValue x:TypeArguments="x:String">OriginalSendRow["InputData"].ToString().Replace("{token}", ExpectedToken)</CSharpValue>
+                                                        </InArgument>
+                                                        <InArgument x:TypeArguments="x:String" x:Key="in_Body">
+                                                          <CSharpValue x:TypeArguments="x:String">"Application Health Check test email (retry). Correlation token: " + ExpectedToken</CSharpValue>
+                                                        </InArgument>
+                                                        <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                                                          <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
+                                                        </InArgument>
+                                                      </scg:Dictionary>
+                                                    </ui:InvokeWorkflowFile.Arguments>
+                                                  </ui:InvokeWorkflowFile>
+                                                </Sequence>
+                                              </If.Then>
+                                              <If.Else>
+                                                <Sequence DisplayName="Else">
+                                                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_AddAttachment workflow (retry)" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_AddAttachment.xaml">
+                                                    <ui:InvokeWorkflowFile.Arguments>
+                                                      <scg:Dictionary x:TypeArguments="x:String, Argument">
+                                                        <InArgument x:TypeArguments="x:String" x:Key="in_TargetRecipient">
+                                                          <CSharpValue x:TypeArguments="x:String">TargetRecipient</CSharpValue>
+                                                        </InArgument>
+                                                        <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
+                                                          <CSharpValue x:TypeArguments="x:String">OriginalSendRow["InputData"].ToString().Replace("{token}", ExpectedToken)</CSharpValue>
+                                                        </InArgument>
+                                                        <InArgument x:TypeArguments="x:String" x:Key="in_Body">
+                                                          <CSharpValue x:TypeArguments="x:String">"Application Health Check test email with attachment (retry). Correlation token: " + ExpectedToken</CSharpValue>
+                                                        </InArgument>
+                                                        <InArgument x:TypeArguments="x:String" x:Key="in_AttachmentPath">
+                                                          <CSharpValue x:TypeArguments="x:String">OriginalSendRow["AttachmentSourcePath"].ToString()</CSharpValue>
+                                                        </InArgument>
+                                                        <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                                                          <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
+                                                        </InArgument>
+                                                      </scg:Dictionary>
+                                                    </ui:InvokeWorkflowFile.Arguments>
+                                                  </ui:InvokeWorkflowFile>
+                                                </Sequence>
+                                              </If.Else>
+                                            </If>
+                                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_VerifyReceive workflow (retry)" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_VerifyReceive.xaml">
+                                              <ui:InvokeWorkflowFile.Arguments>
+                                                <scg:Dictionary x:TypeArguments="x:String, Argument">
+                                                  <InArgument x:TypeArguments="x:String" x:Key="in_CorrelationToken">
+                                                    <CSharpValue x:TypeArguments="x:String">ExpectedToken</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                                                    <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
+                                                  </InArgument>
+                                                  <InArgument x:TypeArguments="x:Int32" x:Key="in_PollIntervalSec">
+                                                    <CSharpValue x:TypeArguments="x:Int32">PollIntervalSec</CSharpValue>
+                                                  </InArgument>
+                                                  <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Found">
+                                                    <CSharpReference x:TypeArguments="x:Boolean">Found</CSharpReference>
+                                                  </OutArgument>
+                                                  <OutArgument x:TypeArguments="x:String" x:Key="out_MatchedSubject">
+                                                    <CSharpReference x:TypeArguments="x:String">MatchedSubject</CSharpReference>
+                                                  </OutArgument>
+                                                </scg:Dictionary>
+                                              </ui:InvokeWorkflowFile.Arguments>
+                                            </ui:InvokeWorkflowFile>
+                                            <Assign DisplayName="Decrement RetriesLeft">
+                                              <Assign.To>
+                                                <OutArgument x:TypeArguments="x:Int32">
+                                                  <CSharpReference x:TypeArguments="x:Int32">RetriesLeft</CSharpReference>
+                                                </OutArgument>
+                                              </Assign.To>
+                                              <Assign.Value>
+                                                <InArgument x:TypeArguments="x:Int32">
+                                                  <CSharpValue x:TypeArguments="x:Int32">RetriesLeft - 1</CSharpValue>
+                                                </InArgument>
+                                              </Assign.Value>
+                                            </Assign>
+                                          </Sequence>
+                                        </ui:InterruptibleWhile.Body>
+                                      </ui:InterruptibleWhile>
+                                      <If DisplayName="If verified">
+                                        <If.Condition>
+                                          <InArgument x:TypeArguments="x:Boolean">
+                                            <CSharpValue x:TypeArguments="x:Boolean">Found</CSharpValue>
+                                          </InArgument>
+                                        </If.Condition>
+                                        <If.Then>
+                                          <Sequence DisplayName="Then">
+                                            <uic:AddDataRow DisplayName="Add Data Row (VerifyReceive Pass)">
+                                              <uic:AddDataRow.DataTable>
+                                                <InOutArgument x:TypeArguments="sd:DataTable">
+                                                  <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+                                                </InOutArgument>
+                                              </uic:AddDataRow.DataTable>
+                                              <uic:AddDataRow.ArrayRow>
+                                                <InArgument x:TypeArguments="s:Object[]">
+                                                  <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Pass", "Matched subject: " + MatchedSubject }</CSharpValue>
+                                                </InArgument>
+                                              </uic:AddDataRow.ArrayRow>
+                                            </uic:AddDataRow>
+                                          </Sequence>
+                                        </If.Then>
+                                        <If.Else>
+                                          <Sequence DisplayName="Else">
+                                            <uic:AddDataRow DisplayName="Add Data Row (VerifyReceive Fail)">
+                                              <uic:AddDataRow.DataTable>
+                                                <InOutArgument x:TypeArguments="sd:DataTable">
+                                                  <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+                                                </InOutArgument>
+                                              </uic:AddDataRow.DataTable>
+                                              <uic:AddDataRow.ArrayRow>
+                                                <InArgument x:TypeArguments="s:Object[]">
+                                                  <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Fail", "Timed out waiting for token " + ExpectedToken }</CSharpValue>
+                                                </InArgument>
+                                              </uic:AddDataRow.ArrayRow>
+                                            </uic:AddDataRow>
+                                            <Assign DisplayName="Assign AppStatus (FAIL)">
+                                              <Assign.To>
+                                                <OutArgument x:TypeArguments="x:String">
+                                                  <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
+                                                </OutArgument>
+                                              </Assign.To>
+                                              <Assign.Value>
+                                                <InArgument x:TypeArguments="x:String">
+                                                  <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
+                                                </InArgument>
+                                              </Assign.Value>
+                                            </Assign>
+                                          </Sequence>
+                                        </If.Else>
+                                      </If>
+                                    </Sequence>
+                                    <Sequence x:Key="VerifyReceiveAttachment" DisplayName="VerifyReceiveAttachment">
+                                      <Assign DisplayName="Assign ExpectedToken (attachment)">
+                                        <Assign.To>
+                                          <OutArgument x:TypeArguments="x:String">
+                                            <CSharpReference x:TypeArguments="x:String">ExpectedToken</CSharpReference>
+                                          </OutArgument>
+                                        </Assign.To>
+                                        <Assign.Value>
+                                          <InArgument x:TypeArguments="x:String">
+                                            <CSharpValue x:TypeArguments="x:String">ScenarioTokens.ContainsKey(CorrelatesWithScenarioID) ? ScenarioTokens[CorrelatesWithScenarioID] : ""</CSharpValue>
+                                          </InArgument>
+                                        </Assign.Value>
+                                      </Assign>
+                                      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_VerifyReceiveAttachment workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_VerifyReceiveAttachment.xaml">
+                                        <ui:InvokeWorkflowFile.Arguments>
+                                          <scg:Dictionary x:TypeArguments="x:String, Argument">
+                                            <InArgument x:TypeArguments="x:String" x:Key="in_CorrelationToken">
+                                              <CSharpValue x:TypeArguments="x:String">ExpectedToken</CSharpValue>
+                                            </InArgument>
+                                            <InArgument x:TypeArguments="x:String" x:Key="in_AttachmentName">
+                                              <CSharpValue x:TypeArguments="x:String">AttachmentSourcePath</CSharpValue>
+                                            </InArgument>
+                                            <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                                              <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
+                                            </InArgument>
+                                            <InArgument x:TypeArguments="x:Int32" x:Key="in_PollIntervalSec">
+                                              <CSharpValue x:TypeArguments="x:Int32">PollIntervalSec</CSharpValue>
+                                            </InArgument>
+                                            <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Found">
+                                              <CSharpReference x:TypeArguments="x:Boolean">Found</CSharpReference>
+                                            </OutArgument>
+                                            <OutArgument x:TypeArguments="x:String" x:Key="out_MatchedSubject">
+                                              <CSharpReference x:TypeArguments="x:String">MatchedSubject</CSharpReference>
+                                            </OutArgument>
+                                          </scg:Dictionary>
+                                        </ui:InvokeWorkflowFile.Arguments>
+                                      </ui:InvokeWorkflowFile>
+                                      <If DisplayName="If attachment verified">
+                                        <If.Condition>
+                                          <InArgument x:TypeArguments="x:Boolean">
+                                            <CSharpValue x:TypeArguments="x:Boolean">Found</CSharpValue>
+                                          </InArgument>
+                                        </If.Condition>
+                                        <If.Then>
+                                          <Sequence DisplayName="Then">
+                                            <uic:AddDataRow DisplayName="Add Data Row (VerifyReceiveAttachment Pass)">
+                                              <uic:AddDataRow.DataTable>
+                                                <InOutArgument x:TypeArguments="sd:DataTable">
+                                                  <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+                                                </InOutArgument>
+                                              </uic:AddDataRow.DataTable>
+                                              <uic:AddDataRow.ArrayRow>
+                                                <InArgument x:TypeArguments="s:Object[]">
+                                                  <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Pass", "Matched subject with attachment: " + MatchedSubject }</CSharpValue>
+                                                </InArgument>
+                                              </uic:AddDataRow.ArrayRow>
+                                            </uic:AddDataRow>
+                                          </Sequence>
+                                        </If.Then>
+                                        <If.Else>
+                                          <Sequence DisplayName="Else">
+                                            <uic:AddDataRow DisplayName="Add Data Row (VerifyReceiveAttachment Fail)">
+                                              <uic:AddDataRow.DataTable>
+                                                <InOutArgument x:TypeArguments="sd:DataTable">
+                                                  <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+                                                </InOutArgument>
+                                              </uic:AddDataRow.DataTable>
+                                              <uic:AddDataRow.ArrayRow>
+                                                <InArgument x:TypeArguments="s:Object[]">
+                                                  <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Fail", "Timed out waiting for token/attachment " + ExpectedToken + " / " + AttachmentSourcePath }</CSharpValue>
+                                                </InArgument>
+                                              </uic:AddDataRow.ArrayRow>
+                                            </uic:AddDataRow>
+                                            <Assign DisplayName="Assign AppStatus (FAIL, attachment)">
+                                              <Assign.To>
+                                                <OutArgument x:TypeArguments="x:String">
+                                                  <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
+                                                </OutArgument>
+                                              </Assign.To>
+                                              <Assign.Value>
+                                                <InArgument x:TypeArguments="x:String">
+                                                  <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
+                                                </InArgument>
+                                              </Assign.Value>
+                                            </Assign>
+                                          </Sequence>
+                                        </If.Else>
+                                      </If>
+                                    </Sequence>
+                                    <Switch.Default>
+                                      <Sequence DisplayName="Default">
+                                        <uic:AddDataRow DisplayName="Add Data Row (unknown Operation)">
+                                          <uic:AddDataRow.DataTable>
+                                            <InOutArgument x:TypeArguments="sd:DataTable">
+                                              <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+                                            </InOutArgument>
+                                          </uic:AddDataRow.DataTable>
+                                          <uic:AddDataRow.ArrayRow>
+                                            <InArgument x:TypeArguments="s:Object[]">
+                                              <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Fail", "Unknown Operation: " + Operation }</CSharpValue>
+                                            </InArgument>
+                                          </uic:AddDataRow.ArrayRow>
+                                        </uic:AddDataRow>
+                                        <Assign DisplayName="Assign AppStatus (FAIL, unknown op)">
+                                          <Assign.To>
+                                            <OutArgument x:TypeArguments="x:String">
+                                              <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
+                                            </OutArgument>
+                                          </Assign.To>
+                                          <Assign.Value>
+                                            <InArgument x:TypeArguments="x:String">
+                                              <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
+                                            </InArgument>
+                                          </Assign.Value>
+                                        </Assign>
+                                      </Sequence>
+                                    </Switch.Default>
+                                  </Switch>
+                                </Sequence>
+                              </TryCatch.Try>
+                              <TryCatch.Catches>
+                                <Catch x:TypeArguments="s:Exception">
+                                  <ActivityAction x:TypeArguments="s:Exception">
+                                    <ActivityAction.Argument>
+                                      <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                                    </ActivityAction.Argument>
+                                    <Sequence DisplayName="Catch">
+                                      <ui:LogMessage DisplayName="Log Message (scenario failed)" Level="Error">
+                                        <ui:LogMessage.Message>
+                                          <InArgument x:TypeArguments="x:Object">
+                                            <CSharpValue x:TypeArguments="x:Object">"Scenario " + ScenarioID + " failed: " + exception.Message</CSharpValue>
+                                          </InArgument>
+                                        </ui:LogMessage.Message>
+                                      </ui:LogMessage>
+                                      <uic:AddDataRow DisplayName="Add Data Row (scenario exception)">
+                                        <uic:AddDataRow.DataTable>
+                                          <InOutArgument x:TypeArguments="sd:DataTable">
+                                            <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+                                          </InOutArgument>
+                                        </uic:AddDataRow.DataTable>
+                                        <uic:AddDataRow.ArrayRow>
+                                          <InArgument x:TypeArguments="s:Object[]">
+                                            <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Fail", exception.Message }</CSharpValue>
+                                          </InArgument>
+                                        </uic:AddDataRow.ArrayRow>
+                                      </uic:AddDataRow>
+                                      <Assign DisplayName="Assign AppStatus (FAIL, exception)">
+                                        <Assign.To>
+                                          <OutArgument x:TypeArguments="x:String">
+                                            <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
+                                          </OutArgument>
+                                        </Assign.To>
+                                        <Assign.Value>
+                                          <InArgument x:TypeArguments="x:String">
+                                            <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
+                                          </InArgument>
+                                        </Assign.Value>
+                                      </Assign>
+                                    </Sequence>
+                                  </ActivityAction>
+                                </Catch>
+                              </TryCatch.Catches>
+                            </TryCatch>
+                          </Sequence>
+                        </If.Then>
+                      </If>
+                    </Sequence>
+                  </ActivityAction>
+                </ui:ForEachRow.Body>
+                <ui:ForEachRow.DataTable>
+                  <InArgument x:TypeArguments="sd:DataTable">
+                    <CSharpValue x:TypeArguments="sd:DataTable">dtScenarios</CSharpValue>
+                  </InArgument>
+                </ui:ForEachRow.DataTable>
+              </ui:ForEachRow>
+            </Sequence>
+            <Switch.Default>
+              <Sequence DisplayName="Default">
+                <ui:LogMessage DisplayName="Log Message (no automation library for this app)" Level="Warn">
+                  <ui:LogMessage.Message>
+                    <InArgument x:TypeArguments="x:Object">
+                      <CSharpValue x:TypeArguments="x:Object">"No automation library implemented for AppID " + AppID + " (" + AppName + "). Skipping."</CSharpValue>
+                    </InArgument>
+                  </ui:LogMessage.Message>
+                </ui:LogMessage>
+                <Assign DisplayName="Assign AppStatus (FAIL, unsupported app)">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">
+                      <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
+                    </OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">
+                      <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
+                    </InArgument>
+                  </Assign.Value>
+                </Assign>
+              </Sequence>
+            </Switch.Default>
+          </Switch>
+        </Sequence>
+      </TryCatch.Try>
+      <TryCatch.Catches>
+        <Catch x:TypeArguments="s:Exception">
+          <ActivityAction x:TypeArguments="s:Exception">
+            <ActivityAction.Argument>
+              <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+            </ActivityAction.Argument>
+            <Sequence DisplayName="Catch">
+              <ui:LogMessage DisplayName="Log Message (app health check failed)" Level="Fatal">
+                <ui:LogMessage.Message>
+                  <InArgument x:TypeArguments="x:Object">
+                    <CSharpValue x:TypeArguments="x:Object">"Health check failed for " + AppName + " (" + AppID + "): " + exception.Message</CSharpValue>
+                  </InArgument>
+                </ui:LogMessage.Message>
+              </ui:LogMessage>
+              <Assign DisplayName="Assign AppStatus (FAIL, app exception)">
+                <Assign.To>
+                  <OutArgument x:TypeArguments="x:String">
+                    <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
+                  </OutArgument>
+                </Assign.To>
+                <Assign.Value>
+                  <InArgument x:TypeArguments="x:String">
+                    <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
+                  </InArgument>
+                </Assign.Value>
+              </Assign>
+            </Sequence>
+          </ActivityAction>
+        </Catch>
+      </TryCatch.Catches>
+      <TryCatch.Finally>
+        <Sequence DisplayName="Finally">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="x:String" Name="HtmlBody" />
+          </Sequence.Variables>
+          <TryCatch DisplayName="Try close/cleanup app">
+            <TryCatch.Try>
+              <Sequence DisplayName="Try">
+                <If DisplayName="If Outlook was launched">
+                  <If.Condition>
+                    <InArgument x:TypeArguments="x:Boolean">
+                      <CSharpValue x:TypeArguments="x:Boolean">AppLaunched &amp;&amp; AppName == "Outlook"</CSharpValue>
+                    </InArgument>
+                  </If.Condition>
+                  <If.Then>
+                    <Sequence DisplayName="Then">
+                      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_Close workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_Close.xaml">
+                        <ui:InvokeWorkflowFile.Arguments>
+                          <scg:Dictionary x:TypeArguments="x:String, Argument">
+                            <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                              <CSharpValue x:TypeArguments="x:Int32">TimeoutSec</CSharpValue>
+                            </InArgument>
+                          </scg:Dictionary>
+                        </ui:InvokeWorkflowFile.Arguments>
+                      </ui:InvokeWorkflowFile>
+                      <If DisplayName="If CleanupMode is Delete">
+                        <If.Condition>
+                          <InArgument x:TypeArguments="x:Boolean">
+                            <CSharpValue x:TypeArguments="x:Boolean">CleanupMode.Trim().ToUpper() == "DELETE"</CSharpValue>
+                          </InArgument>
+                        </If.Condition>
+                        <If.Then>
+                          <Sequence DisplayName="Then">
+                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_Cleanup workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_Cleanup.xaml">
+                              <ui:InvokeWorkflowFile.Arguments>
+                                <scg:Dictionary x:TypeArguments="x:String, Argument" />
+                              </ui:InvokeWorkflowFile.Arguments>
+                            </ui:InvokeWorkflowFile>
+                          </Sequence>
+                        </If.Then>
+                      </If>
+                    </Sequence>
+                  </If.Then>
+                </If>
+              </Sequence>
+            </TryCatch.Try>
+            <TryCatch.Catches>
+              <Catch x:TypeArguments="s:Exception">
+                <ActivityAction x:TypeArguments="s:Exception">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                  </ActivityAction.Argument>
+                  <Sequence DisplayName="Catch">
+                    <ui:LogMessage DisplayName="Log Message (close/cleanup failed)" Level="Warn">
+                      <ui:LogMessage.Message>
+                        <InArgument x:TypeArguments="x:Object">
+                          <CSharpValue x:TypeArguments="x:Object">"Close/cleanup failed for " + AppName + ": " + exception.Message</CSharpValue>
+                        </InArgument>
+                      </ui:LogMessage.Message>
+                    </ui:LogMessage>
+                  </Sequence>
+                </ActivityAction>
+              </Catch>
+            </TryCatch.Catches>
+          </TryCatch>
+          <TryCatch DisplayName="Try build and send holistic report">
+            <TryCatch.Try>
+              <Sequence DisplayName="Try">
+                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke BuildHtmlReport workflow" UnSafe="False" WorkflowFileName="Reporting\BuildHtmlReport.xaml">
+                  <ui:InvokeWorkflowFile.Arguments>
+                    <scg:Dictionary x:TypeArguments="x:String, Argument">
+                      <InArgument x:TypeArguments="x:String" x:Key="in_AppID">
+                        <CSharpValue x:TypeArguments="x:String">AppID</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_AppName">
+                        <CSharpValue x:TypeArguments="x:String">AppName</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_AppStatus">
+                        <CSharpValue x:TypeArguments="x:String">AppStatus</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_RunID">
+                        <CSharpValue x:TypeArguments="x:String">RunID</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="sd:DataTable" x:Key="in_ScenarioResults">
+                        <CSharpValue x:TypeArguments="sd:DataTable">ScenarioResults</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_TemplatePath">
+                        <CSharpValue x:TypeArguments="x:String">"Templates\\HolisticReportTemplate.html"</CSharpValue>
+                      </InArgument>
+                      <OutArgument x:TypeArguments="x:String" x:Key="out_HtmlBody">
+                        <CSharpReference x:TypeArguments="x:String">HtmlBody</CSharpReference>
+                      </OutArgument>
+                    </scg:Dictionary>
+                  </ui:InvokeWorkflowFile.Arguments>
+                </ui:InvokeWorkflowFile>
+                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke SaveReportLocal workflow" UnSafe="False" WorkflowFileName="Reporting\SaveReportLocal.xaml">
+                  <ui:InvokeWorkflowFile.Arguments>
+                    <scg:Dictionary x:TypeArguments="x:String, Argument">
+                      <InArgument x:TypeArguments="x:String" x:Key="in_HtmlBody">
+                        <CSharpValue x:TypeArguments="x:String">HtmlBody</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_FilePath">
+                        <CSharpValue x:TypeArguments="x:String">Path.Combine(ReportsFolder, AppID + "_HolisticSummary.html")</CSharpValue>
+                      </InArgument>
+                    </scg:Dictionary>
+                  </ui:InvokeWorkflowFile.Arguments>
+                </ui:InvokeWorkflowFile>
+                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke EmailReport workflow" UnSafe="False" WorkflowFileName="Reporting\EmailReport.xaml">
+                  <ui:InvokeWorkflowFile.Arguments>
+                    <scg:Dictionary x:TypeArguments="x:String, Argument">
+                      <InArgument x:TypeArguments="x:String" x:Key="in_ToAddress">
+                        <CSharpValue x:TypeArguments="x:String">NotifyEmail</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
+                        <CSharpValue x:TypeArguments="x:String">"Health Check - " + AppName + " - " + AppStatus</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="x:String" x:Key="in_HtmlBody">
+                        <CSharpValue x:TypeArguments="x:String">HtmlBody</CSharpValue>
+                      </InArgument>
+                      <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                        <CSharpValue x:TypeArguments="x:Int32">TimeoutSec</CSharpValue>
+                      </InArgument>
+                    </scg:Dictionary>
+                  </ui:InvokeWorkflowFile.Arguments>
+                </ui:InvokeWorkflowFile>
+              </Sequence>
+            </TryCatch.Try>
+            <TryCatch.Catches>
+              <Catch x:TypeArguments="s:Exception">
+                <ActivityAction x:TypeArguments="s:Exception">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                  </ActivityAction.Argument>
+                  <Sequence DisplayName="Catch">
+                    <ui:LogMessage DisplayName="Log Message (report build/send failed)" Level="Warn">
+                      <ui:LogMessage.Message>
+                        <InArgument x:TypeArguments="x:Object">
+                          <CSharpValue x:TypeArguments="x:Object">"Holistic report build/send failed for " + AppName + ": " + exception.Message</CSharpValue>
+                        </InArgument>
+                      </ui:LogMessage.Message>
+                    </ui:LogMessage>
+                  </Sequence>
+                </ActivityAction>
+              </Catch>
+            </TryCatch.Catches>
+          </TryCatch>
+          <TryCatch DisplayName="Try record run history and master results">
+            <TryCatch.Try>
+              <Sequence DisplayName="Try">
+                <ui:AppendLine DisplayName="Append Line (RunHistory.jsonl)" Encoding="{x:Null}" FileName="Data\History\RunHistory.jsonl">
+                  <ui:AppendLine.Text>
+                    <InArgument x:TypeArguments="x:String">
+                      <CSharpValue x:TypeArguments="x:String">"{\"RunID\":\"" + RunID + "\",\"AppID\":\"" + AppID + "\",\"AppName\":\"" + AppName + "\",\"Status\":\"" + AppStatus + "\",\"ScenarioCount\":" + ScenarioResults.Rows.Count + ",\"PassCount\":" + ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Pass") + ",\"FailCount\":" + ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Fail") + ",\"Timestamp\":\"" + DateTime.Now.ToString("o") + "\"}"</CSharpValue>
+                    </InArgument>
+                  </ui:AppendLine.Text>
+                </ui:AppendLine>
+                <If DisplayName="If MasterAppResults table does not exist yet">
+                  <If.Condition>
+                    <InArgument x:TypeArguments="x:Boolean">
+                      <CSharpValue x:TypeArguments="x:Boolean">!in_Config.ContainsKey("MasterAppResults")</CSharpValue>
+                    </InArgument>
+                  </If.Condition>
+                  <If.Then>
+                    <Sequence DisplayName="Then">
+                      <uic:GenerateDataTable DisplayName="Generate Data Table (MasterAppResults header)" AutoDetectTypes="True" UseColumnHeader="True" CSVParsing="True">
+                        <uic:GenerateDataTable.Input>
+                          <InArgument x:TypeArguments="x:String">
+                            <CSharpValue x:TypeArguments="x:String">"AppID,AppName,Status,PassCount,FailCount,ScenarioCount"</CSharpValue>
+                          </InArgument>
+                        </uic:GenerateDataTable.Input>
+                        <uic:GenerateDataTable.DataTable>
+                          <OutArgument x:TypeArguments="sd:DataTable">
+                            <CSharpReference x:TypeArguments="sd:DataTable">AppResultsTable</CSharpReference>
+                          </OutArgument>
+                        </uic:GenerateDataTable.DataTable>
+                      </uic:GenerateDataTable>
+                      <Assign DisplayName="Assign in_Config MasterAppResults">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:Object">
+                            <CSharpReference x:TypeArguments="x:Object">in_Config["MasterAppResults"]</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:Object">
+                            <CSharpValue x:TypeArguments="x:Object">AppResultsTable</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                  </If.Then>
+                  <If.Else>
+                    <Sequence DisplayName="Else">
+                      <Assign DisplayName="Assign AppResultsTable (existing)">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="sd:DataTable">
+                            <CSharpReference x:TypeArguments="sd:DataTable">AppResultsTable</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="sd:DataTable">
+                            <CSharpValue x:TypeArguments="sd:DataTable">(DataTable)in_Config["MasterAppResults"]</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                  </If.Else>
+                </If>
+                <uic:AddDataRow DisplayName="Add Data Row (MasterAppResults)">
+                  <uic:AddDataRow.DataTable>
+                    <InOutArgument x:TypeArguments="sd:DataTable">
+                      <CSharpReference x:TypeArguments="sd:DataTable">AppResultsTable</CSharpReference>
+                    </InOutArgument>
+                  </uic:AddDataRow.DataTable>
+                  <uic:AddDataRow.ArrayRow>
+                    <InArgument x:TypeArguments="s:Object[]">
+                      <CSharpValue x:TypeArguments="s:Object[]">new object[] {AppID, AppName, AppStatus, ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Pass"), ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Fail"), ScenarioResults.Rows.Count }</CSharpValue>
+                    </InArgument>
+                  </uic:AddDataRow.ArrayRow>
+                </uic:AddDataRow>
+              </Sequence>
+            </TryCatch.Try>
+            <TryCatch.Catches>
+              <Catch x:TypeArguments="s:Exception">
+                <ActivityAction x:TypeArguments="s:Exception">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
+                  </ActivityAction.Argument>
+                  <Sequence DisplayName="Catch">
+                    <ui:LogMessage DisplayName="Log Message (history/master result recording failed)" Level="Warn">
+                      <ui:LogMessage.Message>
+                        <InArgument x:TypeArguments="x:Object">
+                          <CSharpValue x:TypeArguments="x:Object">"Failed to record run history / master result for " + AppName + ": " + exception.Message</CSharpValue>
+                        </InArgument>
+                      </ui:LogMessage.Message>
+                    </ui:LogMessage>
+                  </Sequence>
+                </ActivityAction>
+              </Catch>
+            </TryCatch.Catches>
+          </TryCatch>
+          <ui:LogMessage DisplayName="Log Message (app health check complete)" Level="Info">
+            <ui:LogMessage.Message>
+              <InArgument x:TypeArguments="x:Object">
+                <CSharpValue x:TypeArguments="x:Object">"Completed health check for " + AppName + " (" + AppID + ") — status: " + AppStatus</CSharpValue>
+              </InArgument>
+            </ui:LogMessage.Message>
+          </ui:LogMessage>
+        </Sequence>
+      </TryCatch.Finally>
+    </TryCatch>
+  </Sequence>
+</Activity>

@@ -1,0 +1,92 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="Applications_Outlook_Outlook_SendEmail" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uix="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property sap2010:Annotation.AnnotationText="Recipient email address for the To field." Name="in_TargetRecipient" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Email subject line. Should already contain the correlation token." Name="in_Subject" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Email body text." Name="in_Body" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="TimeoutSec used for each UI step in this scenario." Name="in_TimeoutSec" Type="InArgument(x:Int32)" />
+  </x:Members>
+  <sap2010:ExpressionActivityEditor.ExpressionActivityEditor>C#</sap2010:ExpressionActivityEditor.ExpressionActivityEditor>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>GlobalConstantsNamespace</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationNext.Activities</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Outlook Send Email" sap2010:Annotation.AnnotationText="Composes and sends a plain email via Outlook Classic. All Click/Type Into targets are placeholders — a developer must run Indicate against a real Outlook Classic instance on each TODO-marked activity (New Email button, To/Subject/Body fields, Send button).">
+    <uix:NApplicationCard DisplayName="TODO Indicate — Use Application/Browser (attach Outlook Classic)" AttachMode="ByInstance" OpenMode="Never" CloseMode="Never" HealingAgentBehavior="Job" IsDisplayNameAuto="False" ScopeGuid="c1a1e001-0001-4a11-8a11-0000000000b1" Version="V2">
+      <uix:NApplicationCard.Timeout>
+        <InArgument x:TypeArguments="x:Double">
+          <CSharpValue x:TypeArguments="x:Double">(double)in_TimeoutSec</CSharpValue>
+        </InArgument>
+      </uix:NApplicationCard.Timeout>
+      <uix:NApplicationCard.Body>
+        <ActivityAction x:TypeArguments="x:Object">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="x:Object" Name="WSSessionData" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Do">
+            <ui:LogMessage DisplayName="Log Message (composing email)" Level="Info">
+              <ui:LogMessage.Message>
+                <InArgument x:TypeArguments="x:Object">
+                  <CSharpValue x:TypeArguments="x:Object">"Composing email to " + in_TargetRecipient + " — subject: " + in_Subject</CSharpValue>
+                </InArgument>
+              </ui:LogMessage.Message>
+            </ui:LogMessage>
+            <uix:NClick DisplayName="TODO Indicate — Click New Email button" ActivateBefore="True" ClickType="Single" HealingAgentBehavior="SameAsCard" KeyModifiers="None" MouseButton="Left" Version="V5" />
+            <uix:NTypeInto DisplayName="TODO Indicate — Type To recipient" ActivateBefore="True" ClickBeforeMode="Single" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" Version="V5">
+              <uix:NTypeInto.Text>
+                <InArgument x:TypeArguments="x:String">
+                  <CSharpValue x:TypeArguments="x:String">in_TargetRecipient</CSharpValue>
+                </InArgument>
+              </uix:NTypeInto.Text>
+            </uix:NTypeInto>
+            <uix:NTypeInto DisplayName="TODO Indicate — Type Subject" ActivateBefore="True" ClickBeforeMode="Single" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" Version="V5">
+              <uix:NTypeInto.Text>
+                <InArgument x:TypeArguments="x:String">
+                  <CSharpValue x:TypeArguments="x:String">in_Subject</CSharpValue>
+                </InArgument>
+              </uix:NTypeInto.Text>
+            </uix:NTypeInto>
+            <uix:NTypeInto DisplayName="TODO Indicate — Type Body" ActivateBefore="True" ClickBeforeMode="Single" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" Version="V5">
+              <uix:NTypeInto.Text>
+                <InArgument x:TypeArguments="x:String">
+                  <CSharpValue x:TypeArguments="x:String">in_Body</CSharpValue>
+                </InArgument>
+              </uix:NTypeInto.Text>
+            </uix:NTypeInto>
+            <uix:NClick DisplayName="TODO Indicate — Click Send button" ActivateBefore="True" ClickType="Single" HealingAgentBehavior="SameAsCard" KeyModifiers="None" MouseButton="Left" Version="V5" />
+            <ui:LogMessage DisplayName="Log Message (email sent)" Level="Info">
+              <ui:LogMessage.Message>
+                <InArgument x:TypeArguments="x:Object">
+                  <CSharpValue x:TypeArguments="x:Object">"Send Email scenario completed for subject: " + in_Subject</CSharpValue>
+                </InArgument>
+              </ui:LogMessage.Message>
+            </ui:LogMessage>
+          </Sequence>
+        </ActivityAction>
+      </uix:NApplicationCard.Body>
+      <uix:NApplicationCard.TargetApp>
+        <uix:TargetApp Area="0, 0, 0, 0" Version="V3" />
+      </uix:NApplicationCard.TargetApp>
+    </uix:NApplicationCard>
+  </Sequence>
+</Activity>

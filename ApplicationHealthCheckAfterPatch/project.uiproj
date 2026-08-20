@@ -1,0 +1,6 @@
+{
+  "Name": "ApplicationHealthCheckAfterPatch",
+  "ProjectType": "Process",
+  "Description": "C# Version",
+  "MainFile": "Main.xaml"
+}

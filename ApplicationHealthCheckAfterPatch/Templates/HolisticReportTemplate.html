@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Health Check - {{APP_NAME}}</title>
+<style>
+  body { font-family: Segoe UI, Arial, sans-serif; color: #222; }
+  h1 { font-size: 18px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 13px; }
+  th { background-color: #eeeeee; }
+  .pass { color: #1a7a1a; font-weight: bold; }
+  .fail { color: #b00020; font-weight: bold; }
+  .summary-pass { background-color: #e6f4e6; }
+  .summary-fail { background-color: #fbe6e6; }
+</style>
+</head>
+<body>
+  <h1>Application Health Check — {{APP_NAME}} ({{APP_ID}})</h1>
+  <p>Run ID: {{RUN_ID}} &nbsp;|&nbsp; Generated: {{TIMESTAMP}}</p>
+  <p class="{{APP_STATUS_CLASS}}">Overall status: {{APP_STATUS}}</p>
+  <table>
+    <tr><th>Scenario ID</th><th>Scenario Name</th><th>Operation</th><th>Status</th><th>Details</th></tr>
+    {{SCENARIO_ROWS}}
+  </table>
+</body>
+</html>

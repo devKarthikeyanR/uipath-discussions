@@ -1,0 +1,184 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="Applications_Outlook_Outlook_VerifyReceiveAttachment" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uix="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property sap2010:Annotation.AnnotationText="The correlation token that must appear in a received email's subject (format HC-{RunID}-{AppID}-{ScenarioID}-{timestamp})." Name="in_CorrelationToken" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Expected attachment file name (e.g. test-attachment.pdf) that must be present on the matched email." Name="in_AttachmentName" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Maximum time (seconds) to keep polling the inbox before giving up." Name="in_TimeoutSec" Type="InArgument(x:Int32)" />
+    <x:Property sap2010:Annotation.AnnotationText="Delay (seconds) between inbox polls." Name="in_PollIntervalSec" Type="InArgument(x:Int32)" />
+    <x:Property sap2010:Annotation.AnnotationText="True if an email whose subject contains the token AND whose attachment list contains the expected file name was found within the timeout." Name="out_Found" Type="OutArgument(x:Boolean)" />
+    <x:Property sap2010:Annotation.AnnotationText="The subject line of the matched email, for evidence/logging." Name="out_MatchedSubject" Type="OutArgument(x:String)" />
+  </x:Members>
+  <sap2010:ExpressionActivityEditor.ExpressionActivityEditor>C#</sap2010:ExpressionActivityEditor.ExpressionActivityEditor>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>GlobalConstantsNamespace</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationNext.Activities</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Outlook Verify Receive Attachment" sap2010:Annotation.AnnotationText="Polls the Outlook Classic Inbox for an email whose subject contains the correlation token AND whose attachment list contains the expected file name, up to in_TimeoutSec at in_PollIntervalSec intervals. All Click/Get Text targets are placeholders — a developer must run Indicate against a real Outlook Classic instance.">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="s:DateTime" Name="StartTime" />
+      <Variable x:TypeArguments="x:Boolean" Name="Found" Default="False" />
+      <Variable x:TypeArguments="x:String" Name="MatchedSubject" Default="&quot;&quot;" />
+      <Variable x:TypeArguments="x:String" Name="InboxText" Default="&quot;&quot;" />
+      <Variable x:TypeArguments="x:String" Name="AttachmentListText" Default="&quot;&quot;" />
+    </Sequence.Variables>
+    <Assign DisplayName="Assign StartTime">
+      <Assign.To>
+        <OutArgument x:TypeArguments="s:DateTime">
+          <CSharpReference x:TypeArguments="s:DateTime">StartTime</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="s:DateTime">
+          <CSharpValue x:TypeArguments="s:DateTime">DateTime.Now</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:InterruptibleWhile DisplayName="Poll inbox until found or timeout">
+      <ui:InterruptibleWhile.Condition>
+        <CSharpValue x:TypeArguments="x:Boolean">!Found &amp;&amp; (DateTime.Now - StartTime).TotalSeconds &lt; in_TimeoutSec</CSharpValue>
+      </ui:InterruptibleWhile.Condition>
+      <ui:InterruptibleWhile.Body>
+        <Sequence DisplayName="Body">
+          <uix:NApplicationCard DisplayName="TODO Indicate — Use Application/Browser (attach Outlook Classic to poll inbox)" AttachMode="ByInstance" OpenMode="Never" CloseMode="Never" HealingAgentBehavior="Job" IsDisplayNameAuto="False" ScopeGuid="c1a1e001-0001-4a11-8a11-0000000000e1" Version="V2">
+            <uix:NApplicationCard.Body>
+              <ActivityAction x:TypeArguments="x:Object">
+                <ActivityAction.Argument>
+                  <DelegateInArgument x:TypeArguments="x:Object" Name="WSSessionData" />
+                </ActivityAction.Argument>
+                <Sequence DisplayName="Do">
+                  <uix:NClick DisplayName="TODO Indicate — Click Inbox folder" ActivateBefore="True" ClickType="Single" HealingAgentBehavior="SameAsCard" KeyModifiers="None" MouseButton="Left" Version="V5" />
+                  <uix:NGetText DisplayName="TODO Indicate — Read Inbox subject list / latest email subject" HealingAgentBehavior="SameAsCard" Version="V5">
+                    <uix:NGetText.TextString>
+                      <OutArgument x:TypeArguments="x:String">
+                        <CSharpReference x:TypeArguments="x:String">InboxText</CSharpReference>
+                      </OutArgument>
+                    </uix:NGetText.TextString>
+                  </uix:NGetText>
+                  <If DisplayName="If subject matches the correlation token">
+                    <If.Condition>
+                      <InArgument x:TypeArguments="x:Boolean">
+                        <CSharpValue x:TypeArguments="x:Boolean">!string.IsNullOrEmpty(InboxText) &amp;&amp; InboxText.Contains(in_CorrelationToken)</CSharpValue>
+                      </InArgument>
+                    </If.Condition>
+                    <If.Then>
+                      <Sequence DisplayName="Then">
+                        <uix:NClick DisplayName="TODO Indicate — Open the matched email" ActivateBefore="True" ClickType="Double" HealingAgentBehavior="SameAsCard" KeyModifiers="None" MouseButton="Left" Version="V5" />
+                        <uix:NGetText DisplayName="TODO Indicate — Read attachment list on the opened email" HealingAgentBehavior="SameAsCard" Version="V5">
+                          <uix:NGetText.TextString>
+                            <OutArgument x:TypeArguments="x:String">
+                              <CSharpReference x:TypeArguments="x:String">AttachmentListText</CSharpReference>
+                            </OutArgument>
+                          </uix:NGetText.TextString>
+                        </uix:NGetText>
+                      </Sequence>
+                    </If.Then>
+                  </If>
+                </Sequence>
+              </ActivityAction>
+            </uix:NApplicationCard.Body>
+            <uix:NApplicationCard.TargetApp>
+              <uix:TargetApp Area="0, 0, 0, 0" Version="V3" />
+            </uix:NApplicationCard.TargetApp>
+          </uix:NApplicationCard>
+          <If DisplayName="If subject and attachment both match">
+            <If.Condition>
+              <InArgument x:TypeArguments="x:Boolean">
+                <CSharpValue x:TypeArguments="x:Boolean">!string.IsNullOrEmpty(InboxText) &amp;&amp; InboxText.Contains(in_CorrelationToken) &amp;&amp; !string.IsNullOrEmpty(AttachmentListText) &amp;&amp; AttachmentListText.Contains(in_AttachmentName)</CSharpValue>
+              </InArgument>
+            </If.Condition>
+            <If.Then>
+              <Sequence DisplayName="Then">
+                <Assign DisplayName="Assign Found">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:Boolean">
+                      <CSharpReference x:TypeArguments="x:Boolean">Found</CSharpReference>
+                    </OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:Boolean">
+                      <CSharpValue x:TypeArguments="x:Boolean">true</CSharpValue>
+                    </InArgument>
+                  </Assign.Value>
+                </Assign>
+                <Assign DisplayName="Assign MatchedSubject">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:String">
+                      <CSharpReference x:TypeArguments="x:String">MatchedSubject</CSharpReference>
+                    </OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:String">
+                      <CSharpValue x:TypeArguments="x:String">InboxText</CSharpValue>
+                    </InArgument>
+                  </Assign.Value>
+                </Assign>
+              </Sequence>
+            </If.Then>
+            <If.Else>
+              <Sequence DisplayName="Else">
+                <Delay DisplayName="Delay (poll interval)">
+                  <Delay.Duration>
+                    <InArgument x:TypeArguments="s:TimeSpan">
+                      <CSharpValue x:TypeArguments="s:TimeSpan">TimeSpan.FromSeconds(in_PollIntervalSec)</CSharpValue>
+                    </InArgument>
+                  </Delay.Duration>
+                </Delay>
+              </Sequence>
+            </If.Else>
+          </If>
+        </Sequence>
+      </ui:InterruptibleWhile.Body>
+    </ui:InterruptibleWhile>
+    <Assign DisplayName="Assign out_Found">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Boolean">
+          <CSharpReference x:TypeArguments="x:Boolean">out_Found</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Boolean">
+          <CSharpValue x:TypeArguments="x:Boolean">Found</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign out_MatchedSubject">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">out_MatchedSubject</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">MatchedSubject</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log Message (verify receive attachment result)" Level="Info">
+      <ui:LogMessage.Message>
+        <InArgument x:TypeArguments="x:Object">
+          <CSharpValue x:TypeArguments="x:Object">"Verify Receive Attachment for token " + in_CorrelationToken + " / " + in_AttachmentName + ": " + (Found ? "FOUND" : "NOT FOUND (timeout)")</CSharpValue>
+        </InArgument>
+      </ui:LogMessage.Message>
+    </ui:LogMessage>
+  </Sequence>
+</Activity>

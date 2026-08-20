@@ -1,0 +1,109 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="Reporting_BuildHtmlReport" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property sap2010:Annotation.AnnotationText="Application ID (e.g. APP001)." Name="in_AppID" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Application name (e.g. Outlook)." Name="in_AppName" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Overall app status: PASS or FAIL." Name="in_AppStatus" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="RunID for this health check run." Name="in_RunID" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Every scenario's result: columns ScenarioID, ScenarioName, Operation, Status, Details." Name="in_ScenarioResults" Type="InArgument(sd:DataTable)" />
+    <x:Property sap2010:Annotation.AnnotationText="Path to Templates\HolisticReportTemplate.html." Name="in_TemplatePath" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="The rendered HTML report body." Name="out_HtmlBody" Type="OutArgument(x:String)" />
+  </x:Members>
+  <sap2010:ExpressionActivityEditor.ExpressionActivityEditor>C#</sap2010:ExpressionActivityEditor.ExpressionActivityEditor>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>GlobalConstantsNamespace</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Build Holistic HTML Report">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="TemplateText" />
+      <Variable x:TypeArguments="x:String" Name="RowsHtml" Default="&quot;&quot;" />
+      <Variable x:TypeArguments="x:String" Name="RowHtml" />
+    </Sequence.Variables>
+    <ui:ReadTextFile DisplayName="Read Text File (report template)" Encoding="{x:Null}">
+      <ui:ReadTextFile.FileName>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">in_TemplatePath</CSharpValue>
+        </InArgument>
+      </ui:ReadTextFile.FileName>
+      <ui:ReadTextFile.Content>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">TemplateText</CSharpReference>
+        </OutArgument>
+      </ui:ReadTextFile.Content>
+    </ui:ReadTextFile>
+    <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DisplayName="For each scenario result">
+      <ui:ForEachRow.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="Row" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Body">
+            <Assign DisplayName="Assign RowHtml">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">
+                  <CSharpReference x:TypeArguments="x:String">RowHtml</CSharpReference>
+                </OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">
+                  <CSharpValue x:TypeArguments="x:String">"&lt;tr&gt;&lt;td&gt;" + Row["ScenarioID"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["ScenarioName"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["Operation"].ToString() + "&lt;/td&gt;&lt;td class=\"" + (Row["Status"].ToString() == "Pass" ? "pass" : "fail") + "\"&gt;" + Row["Status"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["Details"].ToString() + "&lt;/td&gt;&lt;/tr&gt;"</CSharpValue>
+                </InArgument>
+              </Assign.Value>
+            </Assign>
+            <Assign DisplayName="Append RowHtml to RowsHtml">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">
+                  <CSharpReference x:TypeArguments="x:String">RowsHtml</CSharpReference>
+                </OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">
+                  <CSharpValue x:TypeArguments="x:String">RowsHtml + RowHtml</CSharpValue>
+                </InArgument>
+              </Assign.Value>
+            </Assign>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEachRow.Body>
+      <ui:ForEachRow.DataTable>
+        <InArgument x:TypeArguments="sd:DataTable">
+          <CSharpValue x:TypeArguments="sd:DataTable">in_ScenarioResults</CSharpValue>
+        </InArgument>
+      </ui:ForEachRow.DataTable>
+    </ui:ForEachRow>
+    <Assign DisplayName="Assign out_HtmlBody (template substitution)">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">out_HtmlBody</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">TemplateText.Replace("{{APP_NAME}}", in_AppName).Replace("{{APP_ID}}", in_AppID).Replace("{{RUN_ID}}", in_RunID).Replace("{{TIMESTAMP}}", DateTime.Now.ToString()).Replace("{{APP_STATUS}}", in_AppStatus).Replace("{{APP_STATUS_CLASS}}", in_AppStatus == "PASS" ? "summary-pass" : "summary-fail").Replace("{{SCENARIO_ROWS}}", RowsHtml)</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+  </Sequence>
+</Activity>
