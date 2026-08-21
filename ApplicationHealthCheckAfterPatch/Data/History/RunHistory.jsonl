@@ -1,0 +1,6 @@
+﻿{"RunID":"183530","AppID":"APP001","AppName":"Outlook","Status":"FAIL","ScenarioCount":0,"PassCount":0,"FailCount":0,"Timestamp":"2026-08-20T18:37:34.3736600+05:30"}
+{"RunID":"202607","AppID":"APP001","AppName":"Outlook","Status":"FAIL","ScenarioCount":0,"PassCount":0,"FailCount":0,"Timestamp":"2026-08-20T20:27:28.6306518+05:30"}
+{"RunID":"212204","AppID":"APP001","AppName":"Outlook","Status":"FAIL","ScenarioCount":0,"PassCount":0,"FailCount":0,"Timestamp":"2026-08-20T21:24:10.5538970+05:30"}
+{"RunID":"214023","AppID":"APP001","AppName":"Outlook","Status":"FAIL","ScenarioCount":4,"PassCount":2,"FailCount":2,"Timestamp":"2026-08-20T21:43:42.7063046+05:30"}
+{"RunID":"083720","AppID":"APP001","AppName":"Outlook","Status":"FAIL","ScenarioCount":4,"PassCount":3,"FailCount":1,"Timestamp":"2026-08-21T08:42:19.3902599+05:30"}
+{"RunID":"090430","AppID":"APP001","AppName":"Outlook","Status":"FAIL","ScenarioCount":4,"PassCount":3,"FailCount":1,"Timestamp":"2026-08-21T09:09:27.7015342+05:30"}

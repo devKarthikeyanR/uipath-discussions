@@ -38,9 +38,25 @@
   <Sequence DisplayName="Build Holistic HTML Report">
     <Sequence.Variables>
       <Variable x:TypeArguments="x:String" Name="TemplateText" />
-      <Variable x:TypeArguments="x:String" Name="RowsHtml" Default="&quot;&quot;" />
+      <Variable x:TypeArguments="x:String" Name="RowsHtml" />
       <Variable x:TypeArguments="x:String" Name="RowHtml" />
+      <Variable x:TypeArguments="x:Int32" Name="PassCount" Default="0" />
+      <Variable x:TypeArguments="x:Int32" Name="FailCount" Default="0" />
+      <Variable x:TypeArguments="x:Int32" Name="TotalCount" Default="0" />
+      <Variable x:TypeArguments="x:Int32" Name="PassRate" Default="0" />
     </Sequence.Variables>
+    <Assign DisplayName="Initialize RowsHtml">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">RowsHtml</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">""</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
     <ui:ReadTextFile DisplayName="Read Text File (report template)" Encoding="{x:Null}">
       <ui:ReadTextFile.FileName>
         <InArgument x:TypeArguments="x:String">
@@ -60,6 +76,53 @@
             <DelegateInArgument x:TypeArguments="sd:DataRow" Name="Row" />
           </ActivityAction.Argument>
           <Sequence DisplayName="Body">
+            <Assign DisplayName="Assign TotalCount">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:Int32">
+                  <CSharpReference x:TypeArguments="x:Int32">TotalCount</CSharpReference>
+                </OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:Int32">
+                  <CSharpValue x:TypeArguments="x:Int32">TotalCount + 1</CSharpValue>
+                </InArgument>
+              </Assign.Value>
+            </Assign>
+            <If DisplayName="If scenario passed">
+              <If.Condition>
+                <InArgument x:TypeArguments="x:Boolean">
+                  <CSharpValue x:TypeArguments="x:Boolean">Row["Status"].ToString() == "Pass"</CSharpValue>
+                </InArgument>
+              </If.Condition>
+              <If.Then>
+                <Assign DisplayName="Assign PassCount">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:Int32">
+                      <CSharpReference x:TypeArguments="x:Int32">PassCount</CSharpReference>
+                    </OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:Int32">
+                      <CSharpValue x:TypeArguments="x:Int32">PassCount + 1</CSharpValue>
+                    </InArgument>
+                  </Assign.Value>
+                </Assign>
+              </If.Then>
+              <If.Else>
+                <Assign DisplayName="Assign FailCount">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:Int32">
+                      <CSharpReference x:TypeArguments="x:Int32">FailCount</CSharpReference>
+                    </OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:Int32">
+                      <CSharpValue x:TypeArguments="x:Int32">FailCount + 1</CSharpValue>
+                    </InArgument>
+                  </Assign.Value>
+                </Assign>
+              </If.Else>
+            </If>
             <Assign DisplayName="Assign RowHtml">
               <Assign.To>
                 <OutArgument x:TypeArguments="x:String">
@@ -68,7 +131,7 @@
               </Assign.To>
               <Assign.Value>
                 <InArgument x:TypeArguments="x:String">
-                  <CSharpValue x:TypeArguments="x:String">"&lt;tr&gt;&lt;td&gt;" + Row["ScenarioID"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["ScenarioName"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["Operation"].ToString() + "&lt;/td&gt;&lt;td class=\"" + (Row["Status"].ToString() == "Pass" ? "pass" : "fail") + "\"&gt;" + Row["Status"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["Details"].ToString() + "&lt;/td&gt;&lt;/tr&gt;"</CSharpValue>
+                  <CSharpValue x:TypeArguments="x:String">"&lt;tr data-status=\"" + (Row["Status"].ToString() == "Pass" ? "pass" : "fail") + "\" class=\"hover:bg-gray-50 transition-colors\" title=\"" + Row["Details"].ToString().Replace("\"", "&amp;quot;") + "\"&gt;&lt;td class=\"text-center text-gray-500 w-12\"&gt;" + (TotalCount).ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["ScenarioID"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["ScenarioName"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["Operation"].ToString() + "&lt;/td&gt;&lt;td&gt;&lt;span class=\"pill " + (Row["Status"].ToString() == "Pass" ? "pill-pass" : "pill-fail") + "\"&gt;" + Row["Status"].ToString().ToUpper() + "&lt;/span&gt;&lt;/td&gt;&lt;td&gt;" + Row["Details"].ToString() + "&lt;/td&gt;&lt;/tr&gt;"</CSharpValue>
                 </InArgument>
               </Assign.Value>
             </Assign>
@@ -93,6 +156,18 @@
         </InArgument>
       </ui:ForEachRow.DataTable>
     </ui:ForEachRow>
+    <Assign DisplayName="Assign PassRate">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">
+          <CSharpReference x:TypeArguments="x:Int32">PassRate</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">
+          <CSharpValue x:TypeArguments="x:Int32">TotalCount == 0 ? 0 : (int)Math.Round(100.0 * PassCount / TotalCount)</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
     <Assign DisplayName="Assign out_HtmlBody (template substitution)">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
@@ -101,7 +176,7 @@
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">TemplateText.Replace("{{APP_NAME}}", in_AppName).Replace("{{APP_ID}}", in_AppID).Replace("{{RUN_ID}}", in_RunID).Replace("{{TIMESTAMP}}", DateTime.Now.ToString()).Replace("{{APP_STATUS}}", in_AppStatus).Replace("{{APP_STATUS_CLASS}}", in_AppStatus == "PASS" ? "summary-pass" : "summary-fail").Replace("{{SCENARIO_ROWS}}", RowsHtml)</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String">TemplateText.Replace("{{APP_NAME}}", in_AppName).Replace("{{APP_ID}}", in_AppID).Replace("{{RUN_ID}}", in_RunID).Replace("{{TIMESTAMP}}", DateTime.Now.ToString()).Replace("{{APP_STATUS}}", in_AppStatus).Replace("{{APP_STATUS_TEXT_CLASS}}", in_AppStatus == "PASS" ? "text-green-700" : "text-red-700").Replace("{{DONUT_COLOR_CLASS}}", "text-green-500").Replace("{{DONUT_DASHARRAY}}", PassRate.ToString() + " " + (100 - PassRate).ToString()).Replace("{{PASS_RATE}}", PassRate.ToString()).Replace("{{PASS_COUNT}}", PassCount.ToString()).Replace("{{FAIL_COUNT}}", FailCount.ToString()).Replace("{{TOTAL_COUNT}}", TotalCount.ToString()).Replace("{{SCENARIO_ROWS}}", RowsHtml)</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>

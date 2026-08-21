@@ -1,9 +1,10 @@
-<Activity mc:Ignorable="sap sap2010" x:Class="Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:uic="clr-namespace:UiPath.Core.Activities;assembly=UiPath.System.Activities" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Activity mc:Ignorable="sap sap2010" x:Class="Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Members>
     <x:Property sap2010:Annotation.AnnotationText="Transaction item to be processed — one row of the Applications sheet." Name="in_TransactionItem" Type="InArgument(x:Object)" />
     <x:Property sap2010:Annotation.AnnotationText="Dictionary structure to store configuration data of the process (settings, constants and assets)." Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
   </x:Members>
   <sap2010:ExpressionActivityEditor.ExpressionActivityEditor>C#</sap2010:ExpressionActivityEditor.ExpressionActivityEditor>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
   <TextExpression.NamespacesForImplementation>
     <sco:Collection x:TypeArguments="x:String">
       <x:String>GlobalConstantsNamespace</x:String>
@@ -23,6 +24,7 @@
       <x:String>System.Text</x:String>
       <x:String>UiPath.Core</x:String>
       <x:String>UiPath.Core.Activities</x:String>
+      <x:String>System.Collections</x:String>
     </sco:Collection>
   </TextExpression.NamespacesForImplementation>
   <TextExpression.ReferencesForImplementation>
@@ -54,9 +56,24 @@
       <AssemblyReference>UiPath.System.Activities</AssemblyReference>
       <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
       <AssemblyReference>UiPath.UIAutomationCore</AssemblyReference>
+      <AssemblyReference>System.Linq.Expressions</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities.Design</AssemblyReference>
+      <AssemblyReference>System.Console</AssemblyReference>
+      <AssemblyReference>System.Security.Permissions</AssemblyReference>
+      <AssemblyReference>System.Configuration.ConfigurationManager</AssemblyReference>
+      <AssemblyReference>System.ComponentModel</AssemblyReference>
+      <AssemblyReference>System.Private.Uri</AssemblyReference>
+      <AssemblyReference>System.Private.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.Private.DataContractSerialization</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Formatters</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Primitives</AssemblyReference>
+      <AssemblyReference>NPOI.Core</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.Collections.NonGeneric</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <Sequence sap2010:Annotation.AnnotationText="Runs the full scenario loop for one application row from the Applications sheet: launch app, dispatch every enabled TC_&lt;AppName&gt; scenario (SendEmail / VerifyReceive / VerifyReceiveAttachment), build+send the per-app holistic summary email, then close/clean up. Per-app Try/Catch/Finally ensures one app's crash never stops the others." DisplayName="Process">
+  <Sequence sap2010:Annotation.AnnotationText="Runs the full scenario loop for one application row from the Applications sheet: launch app, dispatch every enabled TC_&lt;AppName&gt; scenario (SendEmail / VerifyReceive / VerifyReceiveAttachment), build+send the per-app holistic summary email, then close/clean up. Per-app Try/Catch/Finally ensures one app's crash never stops the others." DisplayName="Process" sap:VirtualizedContainerService.HintSize="790.8000000000001,8266.4" sap2010:WorkflowViewState.IdRef="Sequence_1">
     <Sequence.Variables>
       <Variable x:TypeArguments="sd:DataRow" Name="AppRow" />
       <Variable x:TypeArguments="x:String" Name="AppID" />
@@ -70,965 +87,363 @@
       <Variable x:TypeArguments="x:String" Name="RunID" />
       <Variable x:TypeArguments="x:String" Name="ReportsFolder" />
       <Variable x:TypeArguments="sd:DataTable" Name="ScenarioResults" />
-      <Variable x:TypeArguments="scg:Dictionary(x:String, x:String)" Name="ScenarioTokens" />
-      <Variable x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)" Name="SendRowsByScenarioID" />
-      <Variable x:TypeArguments="x:String" Name="AppStatus" Default="&quot;PASS&quot;" />
-      <Variable x:TypeArguments="sd:DataTable" Name="dtScenarios" />
-      <Variable x:TypeArguments="x:Boolean" Name="AppLaunched" Default="False" />
+      <Variable x:TypeArguments="x:String" Default="&quot;PASS&quot;" Name="AppStatus" />
+      <Variable x:TypeArguments="x:Boolean" Default="False" Name="AppLaunched" />
       <Variable x:TypeArguments="sd:DataTable" Name="AppResultsTable" />
+      <Variable x:TypeArguments="sd:DataTable" Name="AllScenarioResultsTable" />
     </Sequence.Variables>
-    <Assign DisplayName="Assign AppRow">
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <Assign DisplayName="Assign AppRow" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_1">
       <Assign.To>
         <OutArgument x:TypeArguments="sd:DataRow">
-          <CSharpReference x:TypeArguments="sd:DataRow">AppRow</CSharpReference>
+          <CSharpReference x:TypeArguments="sd:DataRow" sap2010:WorkflowViewState.IdRef="CSharpReference`1_1">AppRow</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="sd:DataRow">
-          <CSharpValue x:TypeArguments="sd:DataRow">(DataRow)in_TransactionItem</CSharpValue>
+          <CSharpValue x:TypeArguments="sd:DataRow" sap2010:WorkflowViewState.IdRef="CSharpValue`1_1">(DataRow)in_TransactionItem</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign AppID">
+    <Assign DisplayName="Assign AppID" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_2">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">AppID</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_2">AppID</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">AppRow["AppID"].ToString().Trim()</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_2">AppRow["AppID"].ToString().Trim()</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign AppName">
+    <Assign DisplayName="Assign AppName" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_3">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">AppName</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_3">AppName</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">AppRow["AppName"].ToString().Trim()</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_3">AppRow["AppName"].ToString().Trim()</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign ExePath">
+    <Assign DisplayName="Assign ExePath" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_4">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">ExePath</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_4">ExePath</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">AppRow["ExePath"].ToString().Trim()</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_4">AppRow["ExePath"].ToString().Trim()</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign CleanupMode">
+    <Assign DisplayName="Assign CleanupMode" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_5">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">CleanupMode</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_5">CleanupMode</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">AppRow["CleanupMode"].ToString().Trim()</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_5">AppRow["CleanupMode"].ToString().Trim()</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign NotifyEmail">
+    <Assign DisplayName="Assign NotifyEmail" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_6">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">NotifyEmail</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_6">NotifyEmail</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">AppRow["NotifyEmail"].ToString().Trim()</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_6">AppRow["NotifyEmail"].ToString().Trim()</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign MaxRetries">
+    <Assign DisplayName="Assign MaxRetries" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_7">
       <Assign.To>
         <OutArgument x:TypeArguments="x:Int32">
-          <CSharpReference x:TypeArguments="x:Int32">MaxRetries</CSharpReference>
+          <CSharpReference x:TypeArguments="x:Int32" sap2010:WorkflowViewState.IdRef="CSharpReference`1_7">MaxRetries</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:Int32">
-          <CSharpValue x:TypeArguments="x:Int32">Int32.Parse(AppRow["MaxRetries"].ToString())</CSharpValue>
+          <CSharpValue x:TypeArguments="x:Int32" sap2010:WorkflowViewState.IdRef="CSharpValue`1_7">Int32.Parse(AppRow["MaxRetries"].ToString())</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign TimeoutSec">
+    <Assign DisplayName="Assign TimeoutSec" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_8">
       <Assign.To>
         <OutArgument x:TypeArguments="x:Int32">
-          <CSharpReference x:TypeArguments="x:Int32">TimeoutSec</CSharpReference>
+          <CSharpReference x:TypeArguments="x:Int32" sap2010:WorkflowViewState.IdRef="CSharpReference`1_8">TimeoutSec</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:Int32">
-          <CSharpValue x:TypeArguments="x:Int32">Int32.Parse(AppRow["TimeoutSec"].ToString())</CSharpValue>
+          <CSharpValue x:TypeArguments="x:Int32" sap2010:WorkflowViewState.IdRef="CSharpValue`1_8">Int32.Parse(AppRow["TimeoutSec"].ToString())</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign AppConfigWorkbook">
+    <Assign DisplayName="Assign AppConfigWorkbook" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_9">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">AppConfigWorkbook</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_9">AppConfigWorkbook</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">in_Config["AppConfigWorkbook"].ToString()</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_9">in_Config["AppConfigWorkbook"].ToString()</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign RunID">
+    <Assign DisplayName="Assign RunID" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_10">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">RunID</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_10">RunID</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">in_Config["RunID"].ToString()</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_10">in_Config["RunID"].ToString()</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign ReportsFolder">
+    <Assign DisplayName="Assign ReportsFolder" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_11">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">ReportsFolder</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_11">ReportsFolder</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">in_Config["ReportsFolder"].ToString()</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_11">in_Config["ReportsFolder"].ToString()</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <uic:GenerateDataTable DisplayName="Generate Data Table (ScenarioResults header)" AutoDetectTypes="True" UseColumnHeader="True" CSVParsing="True">
-      <uic:GenerateDataTable.Input>
-        <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">"ScenarioID,ScenarioName,Operation,Status,Details"</CSharpValue>
-        </InArgument>
-      </uic:GenerateDataTable.Input>
-      <uic:GenerateDataTable.DataTable>
+    <ui:GenerateDataTable ColumnSeparators="{x:Null}" ColumnSizes="{x:Null}" NewLineSeparator="{x:Null}" Positions="{x:Null}" CSVParsing="True" DisplayName="Generate Data Table (ScenarioResults header)" sap:VirtualizedContainerService.HintSize="556.8,235.2" sap2010:WorkflowViewState.IdRef="GenerateDataTable_1" UseColumnHeader="True">
+      <ui:GenerateDataTable.DataTable>
         <OutArgument x:TypeArguments="sd:DataTable">
-          <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
+          <CSharpReference x:TypeArguments="sd:DataTable" sap2010:WorkflowViewState.IdRef="CSharpReference`1_12">ScenarioResults</CSharpReference>
         </OutArgument>
-      </uic:GenerateDataTable.DataTable>
-    </uic:GenerateDataTable>
-    <Assign DisplayName="Assign ScenarioTokens (new)">
+      </ui:GenerateDataTable.DataTable>
+      <ui:GenerateDataTable.Input>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_12">"ScenarioID,ScenarioName,Operation,Status,Details"</CSharpValue>
+        </InArgument>
+      </ui:GenerateDataTable.Input>
+    </ui:GenerateDataTable>
+    <Assign sap2010:Annotation.AnnotationText="GenerateDataTable's CSVParsing has no data rows to sample here, so it can mistype a column (e.g. ScenarioID as DateTime). Force every column to String explicitly so AddDataRow never fails on values like &quot;OL-S01&quot;." DisplayName="Force ScenarioResults.ScenarioID column to String" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_1">
       <Assign.To>
-        <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">
-          <CSharpReference x:TypeArguments="scg:Dictionary(x:String, x:String)">ScenarioTokens</CSharpReference>
+        <OutArgument x:TypeArguments="s:Type">
+          <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_1">ScenarioResults.Columns["ScenarioID"].DataType</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
-        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:String)">
-          <CSharpValue x:TypeArguments="scg:Dictionary(x:String, x:String)">new Dictionary&lt;string, string&gt;()</CSharpValue>
+        <InArgument x:TypeArguments="s:Type">
+          <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_1">typeof(string)</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign SendRowsByScenarioID (new)">
+    <Assign DisplayName="Force ScenarioResults.ScenarioName column to String" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_2">
       <Assign.To>
-        <OutArgument x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)">
-          <CSharpReference x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)">SendRowsByScenarioID</CSharpReference>
+        <OutArgument x:TypeArguments="s:Type">
+          <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_2">ScenarioResults.Columns["ScenarioName"].DataType</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
-        <InArgument x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)">
-          <CSharpValue x:TypeArguments="scg:Dictionary(x:String, sd:DataRow)">new Dictionary&lt;string, DataRow&gt;()</CSharpValue>
+        <InArgument x:TypeArguments="s:Type">
+          <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_2">typeof(string)</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <ui:LogMessage DisplayName="Log Message (starting app health check)" Level="Info">
+    <Assign DisplayName="Force ScenarioResults.Operation column to String" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_3">
+      <Assign.To>
+        <OutArgument x:TypeArguments="s:Type">
+          <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_3">ScenarioResults.Columns["Operation"].DataType</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="s:Type">
+          <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_3">typeof(string)</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Force ScenarioResults.Status column to String" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_4">
+      <Assign.To>
+        <OutArgument x:TypeArguments="s:Type">
+          <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_4">ScenarioResults.Columns["Status"].DataType</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="s:Type">
+          <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_4">typeof(string)</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Force ScenarioResults.Details column to String" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_5">
+      <Assign.To>
+        <OutArgument x:TypeArguments="s:Type">
+          <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_5">ScenarioResults.Columns["Details"].DataType</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="s:Type">
+          <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_5">typeof(string)</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log Message (starting app health check)" sap:VirtualizedContainerService.HintSize="556.8,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info">
       <ui:LogMessage.Message>
         <InArgument x:TypeArguments="x:Object">
-          <CSharpValue x:TypeArguments="x:Object">"Starting health check for " + AppName + " (" + AppID + ")"</CSharpValue>
+          <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_15">"Starting health check for " + AppName + " (" + AppID + ")"</CSharpValue>
         </InArgument>
       </ui:LogMessage.Message>
     </ui:LogMessage>
-    <TryCatch DisplayName="Try process this application">
+    <TryCatch DisplayName="Try process this application" sap:VirtualizedContainerService.HintSize="556.8,5915.2" sap2010:WorkflowViewState.IdRef="TryCatch_1">
       <TryCatch.Try>
-        <Sequence DisplayName="Try">
-          <Switch x:TypeArguments="x:String" DisplayName="Switch on AppName" Expression="AppName">
-            <Sequence x:Key="Outlook" DisplayName="Outlook">
-              <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_Launch workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_Launch.xaml">
-                <ui:InvokeWorkflowFile.Arguments>
-                  <scg:Dictionary x:TypeArguments="x:String, Argument">
+        <Sequence DisplayName="Try" sap:VirtualizedContainerService.HintSize="555.2,989.6" sap2010:WorkflowViewState.IdRef="Sequence_21">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="x:String" Name="ProcessAppWorkflowFileName" />
+          </Sequence.Variables>
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <Assign DisplayName="Assign ProcessAppWorkflowFileName" sap:VirtualizedContainerService.HintSize="521.6,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_1">
+            <Assign.To>
+              <OutArgument x:TypeArguments="x:String">
+                <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference_new_1">ProcessAppWorkflowFileName</CSharpReference>
+              </OutArgument>
+            </Assign.To>
+            <Assign.Value>
+              <InArgument x:TypeArguments="x:String">
+                <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_1">Path.Combine("Applications", AppName, "Process_" + AppName + ".xaml")</CSharpValue>
+              </InArgument>
+            </Assign.Value>
+          </Assign>
+          <If DisplayName="If per-app process workflow exists" sap:VirtualizedContainerService.HintSize="521.6,755.2" sap2010:WorkflowViewState.IdRef="If_new_1">
+            <If.Condition>
+              <InArgument x:TypeArguments="x:Boolean">
+                <CSharpValue x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpValue_new_2">File.Exists(ProcessAppWorkflowFileName)</CSharpValue>
+              </InArgument>
+            </If.Condition>
+            <If.Then>
+              <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="449.6,225.6" sap2010:WorkflowViewState.IdRef="Sequence_new_1">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke Process_&lt;AppName&gt; workflow" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_new_1" UnSafe="False">
+                  <ui:InvokeWorkflowFile.Arguments>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_AppID">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_4">AppID</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_AppName">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_5">AppName</CSharpValue>
+                    </InArgument>
                     <InArgument x:TypeArguments="x:String" x:Key="in_ExePath">
-                      <CSharpValue x:TypeArguments="x:String">ExePath</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_6">ExePath</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_NotifyEmail">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_7">NotifyEmail</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_AppConfigWorkbook">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_8">AppConfigWorkbook</CSharpValue>
                     </InArgument>
                     <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                      <CSharpValue x:TypeArguments="x:Int32">TimeoutSec</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:Int32" sap2010:WorkflowViewState.IdRef="CSharpValue_new_9">TimeoutSec</CSharpValue>
                     </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_RunID">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_10">RunID</CSharpValue>
+                    </InArgument>
+                    <InOutArgument x:TypeArguments="sd:DataTable" x:Key="io_ScenarioResults">
+                      <CSharpReference x:TypeArguments="sd:DataTable" sap2010:WorkflowViewState.IdRef="CSharpReference_new_2">ScenarioResults</CSharpReference>
+                    </InOutArgument>
+                    <InOutArgument x:TypeArguments="x:String" x:Key="io_AppStatus">
+                      <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference_new_3">AppStatus</CSharpReference>
+                    </InOutArgument>
+                    <OutArgument x:TypeArguments="x:Boolean" x:Key="out_AppLaunched">
+                      <CSharpReference x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpReference_new_4">AppLaunched</CSharpReference>
+                    </OutArgument>
+                  </ui:InvokeWorkflowFile.Arguments>
+                  <ui:InvokeWorkflowFile.WorkflowFileName>
+                    <InArgument x:TypeArguments="x:String">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_3">ProcessAppWorkflowFileName</CSharpValue>
+                    </InArgument>
+                  </ui:InvokeWorkflowFile.WorkflowFileName>
+                </ui:InvokeWorkflowFile>
+              </Sequence>
+            </If.Then>
+            <If.Else>
+              <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="449.6,400" sap2010:WorkflowViewState.IdRef="Sequence_new_2">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
                   </scg:Dictionary>
-                </ui:InvokeWorkflowFile.Arguments>
-              </ui:InvokeWorkflowFile>
-              <Assign DisplayName="Assign AppLaunched">
-                <Assign.To>
-                  <OutArgument x:TypeArguments="x:Boolean">
-                    <CSharpReference x:TypeArguments="x:Boolean">AppLaunched</CSharpReference>
-                  </OutArgument>
-                </Assign.To>
-                <Assign.Value>
-                  <InArgument x:TypeArguments="x:Boolean">
-                    <CSharpValue x:TypeArguments="x:Boolean">true</CSharpValue>
-                  </InArgument>
-                </Assign.Value>
-              </Assign>
-              <ui:ReadRange Range="{x:Null}" WorkbookPathResource="{x:Null}" AddHeaders="True" DisplayName="Read range (TC_&lt;AppName&gt; sheet)">
-                <ui:ReadRange.DataTable>
-                  <OutArgument x:TypeArguments="sd:DataTable">
-                    <CSharpReference x:TypeArguments="sd:DataTable">dtScenarios</CSharpReference>
-                  </OutArgument>
-                </ui:ReadRange.DataTable>
-                <ui:ReadRange.SheetName>
-                  <InArgument x:TypeArguments="x:String">
-                    <CSharpValue x:TypeArguments="x:String">"TC_" + AppName</CSharpValue>
-                  </InArgument>
-                </ui:ReadRange.SheetName>
-                <ui:ReadRange.WorkbookPath>
-                  <InArgument x:TypeArguments="x:String">
-                    <CSharpValue x:TypeArguments="x:String">AppConfigWorkbook</CSharpValue>
-                  </InArgument>
-                </ui:ReadRange.WorkbookPath>
-              </ui:ReadRange>
-              <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DisplayName="For each scenario row">
-                <ui:ForEachRow.Body>
-                  <ActivityAction x:TypeArguments="sd:DataRow">
-                    <ActivityAction.Argument>
-                      <DelegateInArgument x:TypeArguments="sd:DataRow" Name="ScenarioRow" />
-                    </ActivityAction.Argument>
-                    <Sequence DisplayName="Body">
-                      <If DisplayName="If scenario is enabled">
-                        <If.Condition>
-                          <InArgument x:TypeArguments="x:Boolean">
-                            <CSharpValue x:TypeArguments="x:Boolean">ScenarioRow["Enabled"].ToString().Trim().ToUpper() == "Y"</CSharpValue>
-                          </InArgument>
-                        </If.Condition>
-                        <If.Then>
-                          <Sequence DisplayName="Then">
-                            <Sequence.Variables>
-                              <Variable x:TypeArguments="x:String" Name="ScenarioID" />
-                              <Variable x:TypeArguments="x:String" Name="ScenarioName" />
-                              <Variable x:TypeArguments="x:String" Name="Operation" />
-                              <Variable x:TypeArguments="x:String" Name="CorrelatesWithScenarioID" />
-                              <Variable x:TypeArguments="x:String" Name="InputData" />
-                              <Variable x:TypeArguments="x:String" Name="TargetRecipient" />
-                              <Variable x:TypeArguments="x:String" Name="AttachmentSourcePath" />
-                              <Variable x:TypeArguments="x:Int32" Name="ScenarioTimeoutSec" />
-                              <Variable x:TypeArguments="x:Int32" Name="PollIntervalSec" />
-                              <Variable x:TypeArguments="x:Int32" Name="RetryCount" />
-                              <Variable x:TypeArguments="x:String" Name="RetryOnTimeoutOnly" />
-                              <Variable x:TypeArguments="x:String" Name="Token" />
-                              <Variable x:TypeArguments="x:Boolean" Name="Found" Default="False" />
-                              <Variable x:TypeArguments="x:String" Name="MatchedSubject" Default="&quot;&quot;" />
-                              <Variable x:TypeArguments="x:Int32" Name="RetriesLeft" />
-                              <Variable x:TypeArguments="x:String" Name="ExpectedToken" Default="&quot;&quot;" />
-                            </Sequence.Variables>
-                            <Assign DisplayName="Assign scenario fields">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:String">
-                                  <CSharpReference x:TypeArguments="x:String">ScenarioID</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:String">
-                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["ScenarioID"].ToString().Trim()</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign ScenarioName">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:String">
-                                  <CSharpReference x:TypeArguments="x:String">ScenarioName</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:String">
-                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["ScenarioName"].ToString().Trim()</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign Operation">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:String">
-                                  <CSharpReference x:TypeArguments="x:String">Operation</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:String">
-                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["Operation"].ToString().Trim()</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign CorrelatesWithScenarioID">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:String">
-                                  <CSharpReference x:TypeArguments="x:String">CorrelatesWithScenarioID</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:String">
-                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["CorrelatesWithScenarioID"].ToString().Trim()</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign InputData">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:String">
-                                  <CSharpReference x:TypeArguments="x:String">InputData</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:String">
-                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["InputData"].ToString()</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign TargetRecipient">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:String">
-                                  <CSharpReference x:TypeArguments="x:String">TargetRecipient</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:String">
-                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["TargetRecipient"].ToString().Trim().ToLower() == "self" ? NotifyEmail : ScenarioRow["TargetRecipient"].ToString().Trim()</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign AttachmentSourcePath">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:String">
-                                  <CSharpReference x:TypeArguments="x:String">AttachmentSourcePath</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:String">
-                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["AttachmentSourcePath"].ToString().Trim()</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign ScenarioTimeoutSec">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:Int32">
-                                  <CSharpReference x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:Int32">
-                                  <CSharpValue x:TypeArguments="x:Int32">Int32.Parse(ScenarioRow["TimeoutSec"].ToString())</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign PollIntervalSec">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:Int32">
-                                  <CSharpReference x:TypeArguments="x:Int32">PollIntervalSec</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:Int32">
-                                  <CSharpValue x:TypeArguments="x:Int32">string.IsNullOrWhiteSpace(ScenarioRow["PollIntervalSec"].ToString()) ? 10 : Int32.Parse(ScenarioRow["PollIntervalSec"].ToString())</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign RetryCount">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:Int32">
-                                  <CSharpReference x:TypeArguments="x:Int32">RetryCount</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:Int32">
-                                  <CSharpValue x:TypeArguments="x:Int32">string.IsNullOrWhiteSpace(ScenarioRow["RetryCount"].ToString()) ? 0 : Int32.Parse(ScenarioRow["RetryCount"].ToString())</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <Assign DisplayName="Assign RetryOnTimeoutOnly">
-                              <Assign.To>
-                                <OutArgument x:TypeArguments="x:String">
-                                  <CSharpReference x:TypeArguments="x:String">RetryOnTimeoutOnly</CSharpReference>
-                                </OutArgument>
-                              </Assign.To>
-                              <Assign.Value>
-                                <InArgument x:TypeArguments="x:String">
-                                  <CSharpValue x:TypeArguments="x:String">ScenarioRow["RetryOnTimeoutOnly"].ToString().Trim()</CSharpValue>
-                                </InArgument>
-                              </Assign.Value>
-                            </Assign>
-                            <TryCatch DisplayName="Try this scenario">
-                              <TryCatch.Try>
-                                <Sequence DisplayName="Try">
-                                  <Switch x:TypeArguments="x:String" DisplayName="Switch on Operation" Expression="Operation">
-                                    <Sequence x:Key="SendEmail" DisplayName="SendEmail">
-                                      <Assign DisplayName="Assign Token">
-                                        <Assign.To>
-                                          <OutArgument x:TypeArguments="x:String">
-                                            <CSharpReference x:TypeArguments="x:String">Token</CSharpReference>
-                                          </OutArgument>
-                                        </Assign.To>
-                                        <Assign.Value>
-                                          <InArgument x:TypeArguments="x:String">
-                                            <CSharpValue x:TypeArguments="x:String">"HC-" + RunID + "-" + AppID + "-" + ScenarioID + "-" + DateTime.Now.ToString("yyyyMMddHHmmss")</CSharpValue>
-                                          </InArgument>
-                                        </Assign.Value>
-                                      </Assign>
-                                      <Assign DisplayName="Store token by ScenarioID">
-                                        <Assign.To>
-                                          <OutArgument x:TypeArguments="x:String">
-                                            <CSharpReference x:TypeArguments="x:String">ScenarioTokens[ScenarioID]</CSharpReference>
-                                          </OutArgument>
-                                        </Assign.To>
-                                        <Assign.Value>
-                                          <InArgument x:TypeArguments="x:String">
-                                            <CSharpValue x:TypeArguments="x:String">Token</CSharpValue>
-                                          </InArgument>
-                                        </Assign.Value>
-                                      </Assign>
-                                      <Assign DisplayName="Store scenario row by ScenarioID">
-                                        <Assign.To>
-                                          <OutArgument x:TypeArguments="sd:DataRow">
-                                            <CSharpReference x:TypeArguments="sd:DataRow">SendRowsByScenarioID[ScenarioID]</CSharpReference>
-                                          </OutArgument>
-                                        </Assign.To>
-                                        <Assign.Value>
-                                          <InArgument x:TypeArguments="sd:DataRow">
-                                            <CSharpValue x:TypeArguments="sd:DataRow">ScenarioRow</CSharpValue>
-                                          </InArgument>
-                                        </Assign.Value>
-                                      </Assign>
-                                      <If DisplayName="If no attachment">
-                                        <If.Condition>
-                                          <InArgument x:TypeArguments="x:Boolean">
-                                            <CSharpValue x:TypeArguments="x:Boolean">string.IsNullOrWhiteSpace(AttachmentSourcePath)</CSharpValue>
-                                          </InArgument>
-                                        </If.Condition>
-                                        <If.Then>
-                                          <Sequence DisplayName="Then">
-                                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_SendEmail workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_SendEmail.xaml">
-                                              <ui:InvokeWorkflowFile.Arguments>
-                                                <scg:Dictionary x:TypeArguments="x:String, Argument">
-                                                  <InArgument x:TypeArguments="x:String" x:Key="in_TargetRecipient">
-                                                    <CSharpValue x:TypeArguments="x:String">TargetRecipient</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
-                                                    <CSharpValue x:TypeArguments="x:String">InputData.Replace("{token}", Token)</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:String" x:Key="in_Body">
-                                                    <CSharpValue x:TypeArguments="x:String">"Application Health Check test email. Correlation token: " + Token</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                                                    <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
-                                                  </InArgument>
-                                                </scg:Dictionary>
-                                              </ui:InvokeWorkflowFile.Arguments>
-                                            </ui:InvokeWorkflowFile>
-                                          </Sequence>
-                                        </If.Then>
-                                        <If.Else>
-                                          <Sequence DisplayName="Else">
-                                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_AddAttachment workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_AddAttachment.xaml">
-                                              <ui:InvokeWorkflowFile.Arguments>
-                                                <scg:Dictionary x:TypeArguments="x:String, Argument">
-                                                  <InArgument x:TypeArguments="x:String" x:Key="in_TargetRecipient">
-                                                    <CSharpValue x:TypeArguments="x:String">TargetRecipient</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
-                                                    <CSharpValue x:TypeArguments="x:String">InputData.Replace("{token}", Token)</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:String" x:Key="in_Body">
-                                                    <CSharpValue x:TypeArguments="x:String">"Application Health Check test email with attachment. Correlation token: " + Token</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:String" x:Key="in_AttachmentPath">
-                                                    <CSharpValue x:TypeArguments="x:String">AttachmentSourcePath</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                                                    <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
-                                                  </InArgument>
-                                                </scg:Dictionary>
-                                              </ui:InvokeWorkflowFile.Arguments>
-                                            </ui:InvokeWorkflowFile>
-                                          </Sequence>
-                                        </If.Else>
-                                      </If>
-                                      <uic:AddDataRow DisplayName="Add Data Row (SendEmail result)">
-                                        <uic:AddDataRow.DataTable>
-                                          <InOutArgument x:TypeArguments="sd:DataTable">
-                                            <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
-                                          </InOutArgument>
-                                        </uic:AddDataRow.DataTable>
-                                        <uic:AddDataRow.ArrayRow>
-                                          <InArgument x:TypeArguments="s:Object[]">
-                                            <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Pass", "Sent with token " + Token }</CSharpValue>
-                                          </InArgument>
-                                        </uic:AddDataRow.ArrayRow>
-                                      </uic:AddDataRow>
-                                    </Sequence>
-                                    <Sequence x:Key="VerifyReceive" DisplayName="VerifyReceive">
-                                      <Assign DisplayName="Assign ExpectedToken">
-                                        <Assign.To>
-                                          <OutArgument x:TypeArguments="x:String">
-                                            <CSharpReference x:TypeArguments="x:String">ExpectedToken</CSharpReference>
-                                          </OutArgument>
-                                        </Assign.To>
-                                        <Assign.Value>
-                                          <InArgument x:TypeArguments="x:String">
-                                            <CSharpValue x:TypeArguments="x:String">ScenarioTokens.ContainsKey(CorrelatesWithScenarioID) ? ScenarioTokens[CorrelatesWithScenarioID] : ""</CSharpValue>
-                                          </InArgument>
-                                        </Assign.Value>
-                                      </Assign>
-                                      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_VerifyReceive workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_VerifyReceive.xaml">
-                                        <ui:InvokeWorkflowFile.Arguments>
-                                          <scg:Dictionary x:TypeArguments="x:String, Argument">
-                                            <InArgument x:TypeArguments="x:String" x:Key="in_CorrelationToken">
-                                              <CSharpValue x:TypeArguments="x:String">ExpectedToken</CSharpValue>
-                                            </InArgument>
-                                            <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                                              <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
-                                            </InArgument>
-                                            <InArgument x:TypeArguments="x:Int32" x:Key="in_PollIntervalSec">
-                                              <CSharpValue x:TypeArguments="x:Int32">PollIntervalSec</CSharpValue>
-                                            </InArgument>
-                                            <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Found">
-                                              <CSharpReference x:TypeArguments="x:Boolean">Found</CSharpReference>
-                                            </OutArgument>
-                                            <OutArgument x:TypeArguments="x:String" x:Key="out_MatchedSubject">
-                                              <CSharpReference x:TypeArguments="x:String">MatchedSubject</CSharpReference>
-                                            </OutArgument>
-                                          </scg:Dictionary>
-                                        </ui:InvokeWorkflowFile.Arguments>
-                                      </ui:InvokeWorkflowFile>
-                                      <Assign DisplayName="Assign RetriesLeft">
-                                        <Assign.To>
-                                          <OutArgument x:TypeArguments="x:Int32">
-                                            <CSharpReference x:TypeArguments="x:Int32">RetriesLeft</CSharpReference>
-                                          </OutArgument>
-                                        </Assign.To>
-                                        <Assign.Value>
-                                          <InArgument x:TypeArguments="x:Int32">
-                                            <CSharpValue x:TypeArguments="x:Int32">RetryCount</CSharpValue>
-                                          </InArgument>
-                                        </Assign.Value>
-                                      </Assign>
-                                      <ui:InterruptibleWhile DisplayName="Retry Send+Verify pair on timeout" sap2010:Annotation.AnnotationText="If RetryOnTimeoutOnly=Y and RetryCount&gt;0 and the verify step timed out (not a hard UI error, which is handled by the outer Catch instead), regenerate the token, resend, and re-poll — decrementing RetryCount each attempt.">
-                                        <ui:InterruptibleWhile.Condition>
-                                          <CSharpValue x:TypeArguments="x:Boolean">!Found &amp;&amp; RetryOnTimeoutOnly.ToUpper() == "Y" &amp;&amp; RetriesLeft &gt; 0 &amp;&amp; SendRowsByScenarioID.ContainsKey(CorrelatesWithScenarioID)</CSharpValue>
-                                        </ui:InterruptibleWhile.Condition>
-                                        <ui:InterruptibleWhile.Body>
-                                          <Sequence DisplayName="Body">
-                                            <Sequence.Variables>
-                                              <Variable x:TypeArguments="sd:DataRow" Name="OriginalSendRow" />
-                                            </Sequence.Variables>
-                                            <Assign DisplayName="Assign OriginalSendRow">
-                                              <Assign.To>
-                                                <OutArgument x:TypeArguments="sd:DataRow">
-                                                  <CSharpReference x:TypeArguments="sd:DataRow">OriginalSendRow</CSharpReference>
-                                                </OutArgument>
-                                              </Assign.To>
-                                              <Assign.Value>
-                                                <InArgument x:TypeArguments="sd:DataRow">
-                                                  <CSharpValue x:TypeArguments="sd:DataRow">SendRowsByScenarioID[CorrelatesWithScenarioID]</CSharpValue>
-                                                </InArgument>
-                                              </Assign.Value>
-                                            </Assign>
-                                            <Assign DisplayName="Regenerate Token">
-                                              <Assign.To>
-                                                <OutArgument x:TypeArguments="x:String">
-                                                  <CSharpReference x:TypeArguments="x:String">ExpectedToken</CSharpReference>
-                                                </OutArgument>
-                                              </Assign.To>
-                                              <Assign.Value>
-                                                <InArgument x:TypeArguments="x:String">
-                                                  <CSharpValue x:TypeArguments="x:String">"HC-" + RunID + "-" + AppID + "-" + CorrelatesWithScenarioID + "-" + DateTime.Now.ToString("yyyyMMddHHmmss")</CSharpValue>
-                                                </InArgument>
-                                              </Assign.Value>
-                                            </Assign>
-                                            <Assign DisplayName="Update stored token">
-                                              <Assign.To>
-                                                <OutArgument x:TypeArguments="x:String">
-                                                  <CSharpReference x:TypeArguments="x:String">ScenarioTokens[CorrelatesWithScenarioID]</CSharpReference>
-                                                </OutArgument>
-                                              </Assign.To>
-                                              <Assign.Value>
-                                                <InArgument x:TypeArguments="x:String">
-                                                  <CSharpValue x:TypeArguments="x:String">ExpectedToken</CSharpValue>
-                                                </InArgument>
-                                              </Assign.Value>
-                                            </Assign>
-                                            <If DisplayName="If original send had no attachment">
-                                              <If.Condition>
-                                                <InArgument x:TypeArguments="x:Boolean">
-                                                  <CSharpValue x:TypeArguments="x:Boolean">string.IsNullOrWhiteSpace(OriginalSendRow["AttachmentSourcePath"].ToString())</CSharpValue>
-                                                </InArgument>
-                                              </If.Condition>
-                                              <If.Then>
-                                                <Sequence DisplayName="Then">
-                                                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_SendEmail workflow (retry)" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_SendEmail.xaml">
-                                                    <ui:InvokeWorkflowFile.Arguments>
-                                                      <scg:Dictionary x:TypeArguments="x:String, Argument">
-                                                        <InArgument x:TypeArguments="x:String" x:Key="in_TargetRecipient">
-                                                          <CSharpValue x:TypeArguments="x:String">TargetRecipient</CSharpValue>
-                                                        </InArgument>
-                                                        <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
-                                                          <CSharpValue x:TypeArguments="x:String">OriginalSendRow["InputData"].ToString().Replace("{token}", ExpectedToken)</CSharpValue>
-                                                        </InArgument>
-                                                        <InArgument x:TypeArguments="x:String" x:Key="in_Body">
-                                                          <CSharpValue x:TypeArguments="x:String">"Application Health Check test email (retry). Correlation token: " + ExpectedToken</CSharpValue>
-                                                        </InArgument>
-                                                        <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                                                          <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
-                                                        </InArgument>
-                                                      </scg:Dictionary>
-                                                    </ui:InvokeWorkflowFile.Arguments>
-                                                  </ui:InvokeWorkflowFile>
-                                                </Sequence>
-                                              </If.Then>
-                                              <If.Else>
-                                                <Sequence DisplayName="Else">
-                                                  <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_AddAttachment workflow (retry)" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_AddAttachment.xaml">
-                                                    <ui:InvokeWorkflowFile.Arguments>
-                                                      <scg:Dictionary x:TypeArguments="x:String, Argument">
-                                                        <InArgument x:TypeArguments="x:String" x:Key="in_TargetRecipient">
-                                                          <CSharpValue x:TypeArguments="x:String">TargetRecipient</CSharpValue>
-                                                        </InArgument>
-                                                        <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
-                                                          <CSharpValue x:TypeArguments="x:String">OriginalSendRow["InputData"].ToString().Replace("{token}", ExpectedToken)</CSharpValue>
-                                                        </InArgument>
-                                                        <InArgument x:TypeArguments="x:String" x:Key="in_Body">
-                                                          <CSharpValue x:TypeArguments="x:String">"Application Health Check test email with attachment (retry). Correlation token: " + ExpectedToken</CSharpValue>
-                                                        </InArgument>
-                                                        <InArgument x:TypeArguments="x:String" x:Key="in_AttachmentPath">
-                                                          <CSharpValue x:TypeArguments="x:String">OriginalSendRow["AttachmentSourcePath"].ToString()</CSharpValue>
-                                                        </InArgument>
-                                                        <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                                                          <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
-                                                        </InArgument>
-                                                      </scg:Dictionary>
-                                                    </ui:InvokeWorkflowFile.Arguments>
-                                                  </ui:InvokeWorkflowFile>
-                                                </Sequence>
-                                              </If.Else>
-                                            </If>
-                                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_VerifyReceive workflow (retry)" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_VerifyReceive.xaml">
-                                              <ui:InvokeWorkflowFile.Arguments>
-                                                <scg:Dictionary x:TypeArguments="x:String, Argument">
-                                                  <InArgument x:TypeArguments="x:String" x:Key="in_CorrelationToken">
-                                                    <CSharpValue x:TypeArguments="x:String">ExpectedToken</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                                                    <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
-                                                  </InArgument>
-                                                  <InArgument x:TypeArguments="x:Int32" x:Key="in_PollIntervalSec">
-                                                    <CSharpValue x:TypeArguments="x:Int32">PollIntervalSec</CSharpValue>
-                                                  </InArgument>
-                                                  <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Found">
-                                                    <CSharpReference x:TypeArguments="x:Boolean">Found</CSharpReference>
-                                                  </OutArgument>
-                                                  <OutArgument x:TypeArguments="x:String" x:Key="out_MatchedSubject">
-                                                    <CSharpReference x:TypeArguments="x:String">MatchedSubject</CSharpReference>
-                                                  </OutArgument>
-                                                </scg:Dictionary>
-                                              </ui:InvokeWorkflowFile.Arguments>
-                                            </ui:InvokeWorkflowFile>
-                                            <Assign DisplayName="Decrement RetriesLeft">
-                                              <Assign.To>
-                                                <OutArgument x:TypeArguments="x:Int32">
-                                                  <CSharpReference x:TypeArguments="x:Int32">RetriesLeft</CSharpReference>
-                                                </OutArgument>
-                                              </Assign.To>
-                                              <Assign.Value>
-                                                <InArgument x:TypeArguments="x:Int32">
-                                                  <CSharpValue x:TypeArguments="x:Int32">RetriesLeft - 1</CSharpValue>
-                                                </InArgument>
-                                              </Assign.Value>
-                                            </Assign>
-                                          </Sequence>
-                                        </ui:InterruptibleWhile.Body>
-                                      </ui:InterruptibleWhile>
-                                      <If DisplayName="If verified">
-                                        <If.Condition>
-                                          <InArgument x:TypeArguments="x:Boolean">
-                                            <CSharpValue x:TypeArguments="x:Boolean">Found</CSharpValue>
-                                          </InArgument>
-                                        </If.Condition>
-                                        <If.Then>
-                                          <Sequence DisplayName="Then">
-                                            <uic:AddDataRow DisplayName="Add Data Row (VerifyReceive Pass)">
-                                              <uic:AddDataRow.DataTable>
-                                                <InOutArgument x:TypeArguments="sd:DataTable">
-                                                  <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
-                                                </InOutArgument>
-                                              </uic:AddDataRow.DataTable>
-                                              <uic:AddDataRow.ArrayRow>
-                                                <InArgument x:TypeArguments="s:Object[]">
-                                                  <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Pass", "Matched subject: " + MatchedSubject }</CSharpValue>
-                                                </InArgument>
-                                              </uic:AddDataRow.ArrayRow>
-                                            </uic:AddDataRow>
-                                          </Sequence>
-                                        </If.Then>
-                                        <If.Else>
-                                          <Sequence DisplayName="Else">
-                                            <uic:AddDataRow DisplayName="Add Data Row (VerifyReceive Fail)">
-                                              <uic:AddDataRow.DataTable>
-                                                <InOutArgument x:TypeArguments="sd:DataTable">
-                                                  <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
-                                                </InOutArgument>
-                                              </uic:AddDataRow.DataTable>
-                                              <uic:AddDataRow.ArrayRow>
-                                                <InArgument x:TypeArguments="s:Object[]">
-                                                  <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Fail", "Timed out waiting for token " + ExpectedToken }</CSharpValue>
-                                                </InArgument>
-                                              </uic:AddDataRow.ArrayRow>
-                                            </uic:AddDataRow>
-                                            <Assign DisplayName="Assign AppStatus (FAIL)">
-                                              <Assign.To>
-                                                <OutArgument x:TypeArguments="x:String">
-                                                  <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
-                                                </OutArgument>
-                                              </Assign.To>
-                                              <Assign.Value>
-                                                <InArgument x:TypeArguments="x:String">
-                                                  <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
-                                                </InArgument>
-                                              </Assign.Value>
-                                            </Assign>
-                                          </Sequence>
-                                        </If.Else>
-                                      </If>
-                                    </Sequence>
-                                    <Sequence x:Key="VerifyReceiveAttachment" DisplayName="VerifyReceiveAttachment">
-                                      <Assign DisplayName="Assign ExpectedToken (attachment)">
-                                        <Assign.To>
-                                          <OutArgument x:TypeArguments="x:String">
-                                            <CSharpReference x:TypeArguments="x:String">ExpectedToken</CSharpReference>
-                                          </OutArgument>
-                                        </Assign.To>
-                                        <Assign.Value>
-                                          <InArgument x:TypeArguments="x:String">
-                                            <CSharpValue x:TypeArguments="x:String">ScenarioTokens.ContainsKey(CorrelatesWithScenarioID) ? ScenarioTokens[CorrelatesWithScenarioID] : ""</CSharpValue>
-                                          </InArgument>
-                                        </Assign.Value>
-                                      </Assign>
-                                      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_VerifyReceiveAttachment workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_VerifyReceiveAttachment.xaml">
-                                        <ui:InvokeWorkflowFile.Arguments>
-                                          <scg:Dictionary x:TypeArguments="x:String, Argument">
-                                            <InArgument x:TypeArguments="x:String" x:Key="in_CorrelationToken">
-                                              <CSharpValue x:TypeArguments="x:String">ExpectedToken</CSharpValue>
-                                            </InArgument>
-                                            <InArgument x:TypeArguments="x:String" x:Key="in_AttachmentName">
-                                              <CSharpValue x:TypeArguments="x:String">AttachmentSourcePath</CSharpValue>
-                                            </InArgument>
-                                            <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                                              <CSharpValue x:TypeArguments="x:Int32">ScenarioTimeoutSec</CSharpValue>
-                                            </InArgument>
-                                            <InArgument x:TypeArguments="x:Int32" x:Key="in_PollIntervalSec">
-                                              <CSharpValue x:TypeArguments="x:Int32">PollIntervalSec</CSharpValue>
-                                            </InArgument>
-                                            <OutArgument x:TypeArguments="x:Boolean" x:Key="out_Found">
-                                              <CSharpReference x:TypeArguments="x:Boolean">Found</CSharpReference>
-                                            </OutArgument>
-                                            <OutArgument x:TypeArguments="x:String" x:Key="out_MatchedSubject">
-                                              <CSharpReference x:TypeArguments="x:String">MatchedSubject</CSharpReference>
-                                            </OutArgument>
-                                          </scg:Dictionary>
-                                        </ui:InvokeWorkflowFile.Arguments>
-                                      </ui:InvokeWorkflowFile>
-                                      <If DisplayName="If attachment verified">
-                                        <If.Condition>
-                                          <InArgument x:TypeArguments="x:Boolean">
-                                            <CSharpValue x:TypeArguments="x:Boolean">Found</CSharpValue>
-                                          </InArgument>
-                                        </If.Condition>
-                                        <If.Then>
-                                          <Sequence DisplayName="Then">
-                                            <uic:AddDataRow DisplayName="Add Data Row (VerifyReceiveAttachment Pass)">
-                                              <uic:AddDataRow.DataTable>
-                                                <InOutArgument x:TypeArguments="sd:DataTable">
-                                                  <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
-                                                </InOutArgument>
-                                              </uic:AddDataRow.DataTable>
-                                              <uic:AddDataRow.ArrayRow>
-                                                <InArgument x:TypeArguments="s:Object[]">
-                                                  <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Pass", "Matched subject with attachment: " + MatchedSubject }</CSharpValue>
-                                                </InArgument>
-                                              </uic:AddDataRow.ArrayRow>
-                                            </uic:AddDataRow>
-                                          </Sequence>
-                                        </If.Then>
-                                        <If.Else>
-                                          <Sequence DisplayName="Else">
-                                            <uic:AddDataRow DisplayName="Add Data Row (VerifyReceiveAttachment Fail)">
-                                              <uic:AddDataRow.DataTable>
-                                                <InOutArgument x:TypeArguments="sd:DataTable">
-                                                  <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
-                                                </InOutArgument>
-                                              </uic:AddDataRow.DataTable>
-                                              <uic:AddDataRow.ArrayRow>
-                                                <InArgument x:TypeArguments="s:Object[]">
-                                                  <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Fail", "Timed out waiting for token/attachment " + ExpectedToken + " / " + AttachmentSourcePath }</CSharpValue>
-                                                </InArgument>
-                                              </uic:AddDataRow.ArrayRow>
-                                            </uic:AddDataRow>
-                                            <Assign DisplayName="Assign AppStatus (FAIL, attachment)">
-                                              <Assign.To>
-                                                <OutArgument x:TypeArguments="x:String">
-                                                  <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
-                                                </OutArgument>
-                                              </Assign.To>
-                                              <Assign.Value>
-                                                <InArgument x:TypeArguments="x:String">
-                                                  <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
-                                                </InArgument>
-                                              </Assign.Value>
-                                            </Assign>
-                                          </Sequence>
-                                        </If.Else>
-                                      </If>
-                                    </Sequence>
-                                    <Switch.Default>
-                                      <Sequence DisplayName="Default">
-                                        <uic:AddDataRow DisplayName="Add Data Row (unknown Operation)">
-                                          <uic:AddDataRow.DataTable>
-                                            <InOutArgument x:TypeArguments="sd:DataTable">
-                                              <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
-                                            </InOutArgument>
-                                          </uic:AddDataRow.DataTable>
-                                          <uic:AddDataRow.ArrayRow>
-                                            <InArgument x:TypeArguments="s:Object[]">
-                                              <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Fail", "Unknown Operation: " + Operation }</CSharpValue>
-                                            </InArgument>
-                                          </uic:AddDataRow.ArrayRow>
-                                        </uic:AddDataRow>
-                                        <Assign DisplayName="Assign AppStatus (FAIL, unknown op)">
-                                          <Assign.To>
-                                            <OutArgument x:TypeArguments="x:String">
-                                              <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
-                                            </OutArgument>
-                                          </Assign.To>
-                                          <Assign.Value>
-                                            <InArgument x:TypeArguments="x:String">
-                                              <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
-                                            </InArgument>
-                                          </Assign.Value>
-                                        </Assign>
-                                      </Sequence>
-                                    </Switch.Default>
-                                  </Switch>
-                                </Sequence>
-                              </TryCatch.Try>
-                              <TryCatch.Catches>
-                                <Catch x:TypeArguments="s:Exception">
-                                  <ActivityAction x:TypeArguments="s:Exception">
-                                    <ActivityAction.Argument>
-                                      <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
-                                    </ActivityAction.Argument>
-                                    <Sequence DisplayName="Catch">
-                                      <ui:LogMessage DisplayName="Log Message (scenario failed)" Level="Error">
-                                        <ui:LogMessage.Message>
-                                          <InArgument x:TypeArguments="x:Object">
-                                            <CSharpValue x:TypeArguments="x:Object">"Scenario " + ScenarioID + " failed: " + exception.Message</CSharpValue>
-                                          </InArgument>
-                                        </ui:LogMessage.Message>
-                                      </ui:LogMessage>
-                                      <uic:AddDataRow DisplayName="Add Data Row (scenario exception)">
-                                        <uic:AddDataRow.DataTable>
-                                          <InOutArgument x:TypeArguments="sd:DataTable">
-                                            <CSharpReference x:TypeArguments="sd:DataTable">ScenarioResults</CSharpReference>
-                                          </InOutArgument>
-                                        </uic:AddDataRow.DataTable>
-                                        <uic:AddDataRow.ArrayRow>
-                                          <InArgument x:TypeArguments="s:Object[]">
-                                            <CSharpValue x:TypeArguments="s:Object[]">new object[] {ScenarioID, ScenarioName, Operation, "Fail", exception.Message }</CSharpValue>
-                                          </InArgument>
-                                        </uic:AddDataRow.ArrayRow>
-                                      </uic:AddDataRow>
-                                      <Assign DisplayName="Assign AppStatus (FAIL, exception)">
-                                        <Assign.To>
-                                          <OutArgument x:TypeArguments="x:String">
-                                            <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
-                                          </OutArgument>
-                                        </Assign.To>
-                                        <Assign.Value>
-                                          <InArgument x:TypeArguments="x:String">
-                                            <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
-                                          </InArgument>
-                                        </Assign.Value>
-                                      </Assign>
-                                    </Sequence>
-                                  </ActivityAction>
-                                </Catch>
-                              </TryCatch.Catches>
-                            </TryCatch>
-                          </Sequence>
-                        </If.Then>
-                      </If>
-                    </Sequence>
-                  </ActivityAction>
-                </ui:ForEachRow.Body>
-                <ui:ForEachRow.DataTable>
-                  <InArgument x:TypeArguments="sd:DataTable">
-                    <CSharpValue x:TypeArguments="sd:DataTable">dtScenarios</CSharpValue>
-                  </InArgument>
-                </ui:ForEachRow.DataTable>
-              </ui:ForEachRow>
-            </Sequence>
-            <Switch.Default>
-              <Sequence DisplayName="Default">
-                <ui:LogMessage DisplayName="Log Message (no automation library for this app)" Level="Warn">
+                </sap:WorkflowViewStateService.ViewState>
+                <ui:LogMessage DisplayName="Log Message (no automation library for this app)" sap:VirtualizedContainerService.HintSize="416,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_new_1" Level="Warn">
                   <ui:LogMessage.Message>
                     <InArgument x:TypeArguments="x:Object">
-                      <CSharpValue x:TypeArguments="x:Object">"No automation library implemented for AppID " + AppID + " (" + AppName + "). Skipping."</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue_new_11">"No automation library implemented for AppID " + AppID + " (" + AppName + "). Expected " + ProcessAppWorkflowFileName + ". Skipping."</CSharpValue>
                     </InArgument>
                   </ui:LogMessage.Message>
                 </ui:LogMessage>
-                <Assign DisplayName="Assign AppStatus (FAIL, unsupported app)">
+                <Assign DisplayName="Assign AppStatus (FAIL, unsupported app)" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="Assign_new_2">
                   <Assign.To>
                     <OutArgument x:TypeArguments="x:String">
-                      <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
+                      <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference_new_5">AppStatus</CSharpReference>
                     </OutArgument>
                   </Assign.To>
                   <Assign.Value>
                     <InArgument x:TypeArguments="x:String">
-                      <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_12">"FAIL"</CSharpValue>
                     </InArgument>
                   </Assign.Value>
                 </Assign>
               </Sequence>
-            </Switch.Default>
-          </Switch>
+            </If.Else>
+          </If>
         </Sequence>
       </TryCatch.Try>
       <TryCatch.Catches>
-        <Catch x:TypeArguments="s:Exception">
+        <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_2">
           <ActivityAction x:TypeArguments="s:Exception">
             <ActivityAction.Argument>
               <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
             </ActivityAction.Argument>
-            <Sequence DisplayName="Catch">
-              <ui:LogMessage DisplayName="Log Message (app health check failed)" Level="Fatal">
+            <Sequence DisplayName="Catch" sap:VirtualizedContainerService.HintSize="555.2,400" sap2010:WorkflowViewState.IdRef="Sequence_22">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+              <ui:LogMessage DisplayName="Log Message (app health check failed)" sap:VirtualizedContainerService.HintSize="521.6,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_4" Level="Fatal">
                 <ui:LogMessage.Message>
                   <InArgument x:TypeArguments="x:Object">
-                    <CSharpValue x:TypeArguments="x:Object">"Health check failed for " + AppName + " (" + AppID + "): " + exception.Message</CSharpValue>
+                    <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_91">"Health check failed for " + AppName + " (" + AppID + "): " + exception.Message</CSharpValue>
                   </InArgument>
                 </ui:LogMessage.Message>
               </ui:LogMessage>
-              <Assign DisplayName="Assign AppStatus (FAIL, app exception)">
+              <Assign DisplayName="Assign AppStatus (FAIL, app exception)" sap:VirtualizedContainerService.HintSize="521.6,165.6" sap2010:WorkflowViewState.IdRef="Assign_41">
                 <Assign.To>
                   <OutArgument x:TypeArguments="x:String">
-                    <CSharpReference x:TypeArguments="x:String">AppStatus</CSharpReference>
+                    <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_56">AppStatus</CSharpReference>
                   </OutArgument>
                 </Assign.To>
                 <Assign.Value>
                   <InArgument x:TypeArguments="x:String">
-                    <CSharpValue x:TypeArguments="x:String">"FAIL"</CSharpValue>
+                    <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_92">"FAIL"</CSharpValue>
                   </InArgument>
                 </Assign.Value>
               </Assign>
@@ -1037,62 +452,113 @@
         </Catch>
       </TryCatch.Catches>
       <TryCatch.Finally>
-        <Sequence DisplayName="Finally">
+        <Sequence DisplayName="Finally" sap:VirtualizedContainerService.HintSize="555.2,4393.6" sap2010:WorkflowViewState.IdRef="Sequence_33">
           <Sequence.Variables>
             <Variable x:TypeArguments="x:String" Name="HtmlBody" />
           </Sequence.Variables>
-          <TryCatch DisplayName="Try close/cleanup app">
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <TryCatch DisplayName="Try close/cleanup app" sap:VirtualizedContainerService.HintSize="521.6,1414.4" sap2010:WorkflowViewState.IdRef="TryCatch_3">
             <TryCatch.Try>
-              <Sequence DisplayName="Try">
-                <If DisplayName="If Outlook was launched">
+              <Sequence DisplayName="Try" sap:VirtualizedContainerService.HintSize="520,958.4" sap2010:WorkflowViewState.IdRef="Sequence_25">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+                <If DisplayName="If app was launched" sap:VirtualizedContainerService.HintSize="486.4,898.4" sap2010:WorkflowViewState.IdRef="If_7">
                   <If.Condition>
                     <InArgument x:TypeArguments="x:Boolean">
-                      <CSharpValue x:TypeArguments="x:Boolean">AppLaunched &amp;&amp; AppName == "Outlook"</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpValue`1_93">AppLaunched &amp;&amp; File.Exists(Path.Combine("Applications", AppName, AppName + "_Close.xaml"))</CSharpValue>
                     </InArgument>
                   </If.Condition>
                   <If.Then>
-                    <Sequence DisplayName="Then">
-                      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_Close workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_Close.xaml">
+                    <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="484.8,679.2" sap2010:WorkflowViewState.IdRef="Sequence_24">
+                      <sap:WorkflowViewStateService.ViewState>
+                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                        </scg:Dictionary>
+                      </sap:WorkflowViewStateService.ViewState>
+                      <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke &lt;AppName&gt;_Close workflow" sap:VirtualizedContainerService.HintSize="451.2,174.4" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_9" UnSafe="False">
                         <ui:InvokeWorkflowFile.Arguments>
-                          <scg:Dictionary x:TypeArguments="x:String, Argument">
-                            <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                              <CSharpValue x:TypeArguments="x:Int32">TimeoutSec</CSharpValue>
-                            </InArgument>
-                          </scg:Dictionary>
+                          <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                            <CSharpValue x:TypeArguments="x:Int32" sap2010:WorkflowViewState.IdRef="CSharpValue`1_94">TimeoutSec</CSharpValue>
+                          </InArgument>
                         </ui:InvokeWorkflowFile.Arguments>
+                        <ui:InvokeWorkflowFile.WorkflowFileName>
+                          <InArgument x:TypeArguments="x:String">
+                            <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_13">Path.Combine("Applications", AppName, AppName + "_Close.xaml")</CSharpValue>
+                          </InArgument>
+                        </ui:InvokeWorkflowFile.WorkflowFileName>
                       </ui:InvokeWorkflowFile>
-                      <If DisplayName="If CleanupMode is Delete">
+                      <If DisplayName="If CleanupMode is Delete" sap:VirtualizedContainerService.HintSize="451.2,444.8" sap2010:WorkflowViewState.IdRef="If_6">
                         <If.Condition>
                           <InArgument x:TypeArguments="x:Boolean">
-                            <CSharpValue x:TypeArguments="x:Boolean">CleanupMode.Trim().ToUpper() == "DELETE"</CSharpValue>
+                            <CSharpValue x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpValue`1_95">CleanupMode.Trim().ToUpper() == "DELETE"</CSharpValue>
                           </InArgument>
                         </If.Condition>
                         <If.Then>
-                          <Sequence DisplayName="Then">
-                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke Outlook_Cleanup workflow" UnSafe="False" WorkflowFileName="Applications\Outlook\Outlook_Cleanup.xaml">
+                          <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="449.6,225.6" sap2010:WorkflowViewState.IdRef="Sequence_23">
+                            <sap:WorkflowViewStateService.ViewState>
+                              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                              </scg:Dictionary>
+                            </sap:WorkflowViewStateService.ViewState>
+                            <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke &lt;AppName&gt;_Cleanup workflow" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_10" UnSafe="False">
                               <ui:InvokeWorkflowFile.Arguments>
                                 <scg:Dictionary x:TypeArguments="x:String, Argument" />
                               </ui:InvokeWorkflowFile.Arguments>
+                              <ui:InvokeWorkflowFile.WorkflowFileName>
+                                <InArgument x:TypeArguments="x:String">
+                                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue_new_14">Path.Combine("Applications", AppName, AppName + "_Cleanup.xaml")</CSharpValue>
+                                </InArgument>
+                              </ui:InvokeWorkflowFile.WorkflowFileName>
                             </ui:InvokeWorkflowFile>
                           </Sequence>
                         </If.Then>
+                        <If.Else>
+                          <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="449.6,89.6" sap2010:WorkflowViewState.IdRef="Sequence_34">
+                            <sap:WorkflowViewStateService.ViewState>
+                              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                              </scg:Dictionary>
+                            </sap:WorkflowViewStateService.ViewState>
+                          </Sequence>
+                        </If.Else>
                       </If>
                     </Sequence>
                   </If.Then>
+                  <If.Else>
+                    <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="484.8,89.6" sap2010:WorkflowViewState.IdRef="Sequence_35">
+                      <sap:WorkflowViewStateService.ViewState>
+                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                        </scg:Dictionary>
+                      </sap:WorkflowViewStateService.ViewState>
+                    </Sequence>
+                  </If.Else>
                 </If>
               </Sequence>
             </TryCatch.Try>
             <TryCatch.Catches>
-              <Catch x:TypeArguments="s:Exception">
+              <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_3">
                 <ActivityAction x:TypeArguments="s:Exception">
                   <ActivityAction.Argument>
                     <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
                   </ActivityAction.Argument>
-                  <Sequence DisplayName="Catch">
-                    <ui:LogMessage DisplayName="Log Message (close/cleanup failed)" Level="Warn">
+                  <Sequence DisplayName="Catch" sap:VirtualizedContainerService.HintSize="520,225.6" sap2010:WorkflowViewState.IdRef="Sequence_26">
+                    <sap:WorkflowViewStateService.ViewState>
+                      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                      </scg:Dictionary>
+                    </sap:WorkflowViewStateService.ViewState>
+                    <ui:LogMessage DisplayName="Log Message (close/cleanup failed)" sap:VirtualizedContainerService.HintSize="486.4,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_5" Level="Warn">
                       <ui:LogMessage.Message>
                         <InArgument x:TypeArguments="x:Object">
-                          <CSharpValue x:TypeArguments="x:Object">"Close/cleanup failed for " + AppName + ": " + exception.Message</CSharpValue>
+                          <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_96">"Close/cleanup failed for " + AppName + ": " + exception.Message</CSharpValue>
                         </InArgument>
                       </ui:LogMessage.Message>
                     </ui:LogMessage>
@@ -1100,80 +566,93 @@
                 </ActivityAction>
               </Catch>
             </TryCatch.Catches>
+            <TryCatch.Finally>
+              <Sequence DisplayName="Finally" sap:VirtualizedContainerService.HintSize="520,89.6" sap2010:WorkflowViewState.IdRef="Sequence_36">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+              </Sequence>
+            </TryCatch.Finally>
           </TryCatch>
-          <TryCatch DisplayName="Try build and send holistic report">
+          <TryCatch DisplayName="Try build and send holistic report" sap:VirtualizedContainerService.HintSize="521.6,1035.2" sap2010:WorkflowViewState.IdRef="TryCatch_4">
             <TryCatch.Try>
-              <Sequence DisplayName="Try">
-                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke BuildHtmlReport workflow" UnSafe="False" WorkflowFileName="Reporting\BuildHtmlReport.xaml">
+              <Sequence DisplayName="Try" sap:VirtualizedContainerService.HintSize="449.6,579.2" sap2010:WorkflowViewState.IdRef="Sequence_27">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke BuildHtmlReport workflow" sap:VirtualizedContainerService.HintSize="416,176" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_11" UnSafe="False" WorkflowFileName="Reporting\BuildHtmlReport.xaml">
                   <ui:InvokeWorkflowFile.Arguments>
-                    <scg:Dictionary x:TypeArguments="x:String, Argument">
-                      <InArgument x:TypeArguments="x:String" x:Key="in_AppID">
-                        <CSharpValue x:TypeArguments="x:String">AppID</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="x:String" x:Key="in_AppName">
-                        <CSharpValue x:TypeArguments="x:String">AppName</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="x:String" x:Key="in_AppStatus">
-                        <CSharpValue x:TypeArguments="x:String">AppStatus</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="x:String" x:Key="in_RunID">
-                        <CSharpValue x:TypeArguments="x:String">RunID</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="sd:DataTable" x:Key="in_ScenarioResults">
-                        <CSharpValue x:TypeArguments="sd:DataTable">ScenarioResults</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="x:String" x:Key="in_TemplatePath">
-                        <CSharpValue x:TypeArguments="x:String">"Templates\\HolisticReportTemplate.html"</CSharpValue>
-                      </InArgument>
-                      <OutArgument x:TypeArguments="x:String" x:Key="out_HtmlBody">
-                        <CSharpReference x:TypeArguments="x:String">HtmlBody</CSharpReference>
-                      </OutArgument>
-                    </scg:Dictionary>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_AppID">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_97">AppID</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_AppName">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_98">AppName</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_AppStatus">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_99">AppStatus</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_RunID">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_100">RunID</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="sd:DataTable" x:Key="in_ScenarioResults">
+                      <CSharpValue x:TypeArguments="sd:DataTable" sap2010:WorkflowViewState.IdRef="CSharpValue`1_101">ScenarioResults</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_TemplatePath">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_102">"Templates\\HolisticReportTemplate.html"</CSharpValue>
+                    </InArgument>
+                    <OutArgument x:TypeArguments="x:String" x:Key="out_HtmlBody">
+                      <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_57">HtmlBody</CSharpReference>
+                    </OutArgument>
                   </ui:InvokeWorkflowFile.Arguments>
                 </ui:InvokeWorkflowFile>
-                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke SaveReportLocal workflow" UnSafe="False" WorkflowFileName="Reporting\SaveReportLocal.xaml">
+                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke SaveReportLocal workflow" sap:VirtualizedContainerService.HintSize="416,176" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_12" UnSafe="False" WorkflowFileName="Reporting\SaveReportLocal.xaml">
                   <ui:InvokeWorkflowFile.Arguments>
-                    <scg:Dictionary x:TypeArguments="x:String, Argument">
-                      <InArgument x:TypeArguments="x:String" x:Key="in_HtmlBody">
-                        <CSharpValue x:TypeArguments="x:String">HtmlBody</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="x:String" x:Key="in_FilePath">
-                        <CSharpValue x:TypeArguments="x:String">Path.Combine(ReportsFolder, AppID + "_HolisticSummary.html")</CSharpValue>
-                      </InArgument>
-                    </scg:Dictionary>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_HtmlBody">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_103">HtmlBody</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_FilePath">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_104">Path.Combine(ReportsFolder, AppID + "_HolisticSummary.html")</CSharpValue>
+                    </InArgument>
                   </ui:InvokeWorkflowFile.Arguments>
                 </ui:InvokeWorkflowFile>
-                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke EmailReport workflow" UnSafe="False" WorkflowFileName="Reporting\EmailReport.xaml">
+                <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" DisplayName="Invoke EmailReport workflow" sap:VirtualizedContainerService.HintSize="416,167.2" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_13" UnSafe="False" WorkflowFileName="Reporting\EmailReport.xaml">
                   <ui:InvokeWorkflowFile.Arguments>
-                    <scg:Dictionary x:TypeArguments="x:String, Argument">
-                      <InArgument x:TypeArguments="x:String" x:Key="in_ToAddress">
-                        <CSharpValue x:TypeArguments="x:String">NotifyEmail</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
-                        <CSharpValue x:TypeArguments="x:String">"Health Check - " + AppName + " - " + AppStatus</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="x:String" x:Key="in_HtmlBody">
-                        <CSharpValue x:TypeArguments="x:String">HtmlBody</CSharpValue>
-                      </InArgument>
-                      <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
-                        <CSharpValue x:TypeArguments="x:Int32">TimeoutSec</CSharpValue>
-                      </InArgument>
-                    </scg:Dictionary>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_ToAddress">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_105">NotifyEmail</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_Subject">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_106">"Health Check - " + AppName + " - " + AppStatus</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:String" x:Key="in_HtmlBody">
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_107">HtmlBody</CSharpValue>
+                    </InArgument>
+                    <InArgument x:TypeArguments="x:Int32" x:Key="in_TimeoutSec">
+                      <CSharpValue x:TypeArguments="x:Int32" sap2010:WorkflowViewState.IdRef="CSharpValue`1_108">TimeoutSec</CSharpValue>
+                    </InArgument>
                   </ui:InvokeWorkflowFile.Arguments>
                 </ui:InvokeWorkflowFile>
               </Sequence>
             </TryCatch.Try>
             <TryCatch.Catches>
-              <Catch x:TypeArguments="s:Exception">
+              <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_4">
                 <ActivityAction x:TypeArguments="s:Exception">
                   <ActivityAction.Argument>
                     <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
                   </ActivityAction.Argument>
-                  <Sequence DisplayName="Catch">
-                    <ui:LogMessage DisplayName="Log Message (report build/send failed)" Level="Warn">
+                  <Sequence DisplayName="Catch" sap:VirtualizedContainerService.HintSize="449.6,225.6" sap2010:WorkflowViewState.IdRef="Sequence_28">
+                    <sap:WorkflowViewStateService.ViewState>
+                      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                      </scg:Dictionary>
+                    </sap:WorkflowViewStateService.ViewState>
+                    <ui:LogMessage DisplayName="Log Message (report build/send failed)" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_6" Level="Warn">
                       <ui:LogMessage.Message>
                         <InArgument x:TypeArguments="x:Object">
-                          <CSharpValue x:TypeArguments="x:Object">"Holistic report build/send failed for " + AppName + ": " + exception.Message</CSharpValue>
+                          <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_109">"Holistic report build/send failed for " + AppName + ": " + exception.Message</CSharpValue>
                         </InArgument>
                       </ui:LogMessage.Message>
                     </ui:LogMessage>
@@ -1181,46 +660,294 @@
                 </ActivityAction>
               </Catch>
             </TryCatch.Catches>
+            <TryCatch.Finally>
+              <Sequence DisplayName="Finally" sap:VirtualizedContainerService.HintSize="449.6,89.6" sap2010:WorkflowViewState.IdRef="Sequence_37">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+              </Sequence>
+            </TryCatch.Finally>
           </TryCatch>
-          <TryCatch DisplayName="Try record run history and master results">
+          <TryCatch DisplayName="Try record run history and master results" sap:VirtualizedContainerService.HintSize="521.6,1718.4" sap2010:WorkflowViewState.IdRef="TryCatch_5">
             <TryCatch.Try>
-              <Sequence DisplayName="Try">
-                <ui:AppendLine DisplayName="Append Line (RunHistory.jsonl)" Encoding="{x:Null}" FileName="Data\History\RunHistory.jsonl">
+              <Sequence DisplayName="Try" sap:VirtualizedContainerService.HintSize="484.8,1262.4" sap2010:WorkflowViewState.IdRef="Sequence_31">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+                <ui:AppendLine File="{x:Null}" DisplayName="Append Line (RunHistory.jsonl)" FileName="Data\History\RunHistory.jsonl" sap:VirtualizedContainerService.HintSize="451.2,166.4" sap2010:WorkflowViewState.IdRef="AppendLine_1" UseDefaultEncoding="False">
                   <ui:AppendLine.Text>
                     <InArgument x:TypeArguments="x:String">
-                      <CSharpValue x:TypeArguments="x:String">"{\"RunID\":\"" + RunID + "\",\"AppID\":\"" + AppID + "\",\"AppName\":\"" + AppName + "\",\"Status\":\"" + AppStatus + "\",\"ScenarioCount\":" + ScenarioResults.Rows.Count + ",\"PassCount\":" + ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Pass") + ",\"FailCount\":" + ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Fail") + ",\"Timestamp\":\"" + DateTime.Now.ToString("o") + "\"}"</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_110">"{\"RunID\":\"" + RunID + "\",\"AppID\":\"" + AppID + "\",\"AppName\":\"" + AppName + "\",\"Status\":\"" + AppStatus + "\",\"ScenarioCount\":" + ScenarioResults.Rows.Count + ",\"PassCount\":" + ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Pass") + ",\"FailCount\":" + ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Fail") + ",\"Timestamp\":\"" + DateTime.Now.ToString("o") + "\"}"</CSharpValue>
                     </InArgument>
                   </ui:AppendLine.Text>
                 </ui:AppendLine>
-                <If DisplayName="If MasterAppResults table does not exist yet">
+                <If DisplayName="If MasterAppResults table does not exist yet" sap:VirtualizedContainerService.HintSize="451.2,824.8" sap2010:WorkflowViewState.IdRef="If_8">
                   <If.Condition>
                     <InArgument x:TypeArguments="x:Boolean">
-                      <CSharpValue x:TypeArguments="x:Boolean">!in_Config.ContainsKey("MasterAppResults")</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpValue`1_111">!in_Config.ContainsKey("MasterAppResults")</CSharpValue>
                     </InArgument>
                   </If.Condition>
                   <If.Then>
-                    <Sequence DisplayName="Then">
-                      <uic:GenerateDataTable DisplayName="Generate Data Table (MasterAppResults header)" AutoDetectTypes="True" UseColumnHeader="True" CSVParsing="True">
-                        <uic:GenerateDataTable.Input>
-                          <InArgument x:TypeArguments="x:String">
-                            <CSharpValue x:TypeArguments="x:String">"AppID,AppName,Status,PassCount,FailCount,ScenarioCount"</CSharpValue>
-                          </InArgument>
-                        </uic:GenerateDataTable.Input>
-                        <uic:GenerateDataTable.DataTable>
+                    <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="449.6,460.8" sap2010:WorkflowViewState.IdRef="Sequence_29">
+                      <sap:WorkflowViewStateService.ViewState>
+                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                        </scg:Dictionary>
+                      </sap:WorkflowViewStateService.ViewState>
+                      <ui:GenerateDataTable ColumnSeparators="{x:Null}" ColumnSizes="{x:Null}" NewLineSeparator="{x:Null}" Positions="{x:Null}" CSVParsing="True" DisplayName="Generate Data Table (MasterAppResults header)" sap:VirtualizedContainerService.HintSize="416,235.2" sap2010:WorkflowViewState.IdRef="GenerateDataTable_2" UseColumnHeader="True">
+                        <ui:GenerateDataTable.DataTable>
                           <OutArgument x:TypeArguments="sd:DataTable">
-                            <CSharpReference x:TypeArguments="sd:DataTable">AppResultsTable</CSharpReference>
+                            <CSharpReference x:TypeArguments="sd:DataTable" sap2010:WorkflowViewState.IdRef="CSharpReference`1_58">AppResultsTable</CSharpReference>
                           </OutArgument>
-                        </uic:GenerateDataTable.DataTable>
-                      </uic:GenerateDataTable>
-                      <Assign DisplayName="Assign in_Config MasterAppResults">
+                        </ui:GenerateDataTable.DataTable>
+                        <ui:GenerateDataTable.Input>
+                          <InArgument x:TypeArguments="x:String">
+                            <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_112">"AppID,AppName,Status,PassCount,FailCount,ScenarioCount"</CSharpValue>
+                          </InArgument>
+                        </ui:GenerateDataTable.Input>
+                      </ui:GenerateDataTable>
+                      <Assign sap2010:Annotation.AnnotationText="Same GenerateDataTable header-only mistyping risk as ScenarioResults — force the schema explicitly." DisplayName="Force AppResultsTable text columns to String" sap:VirtualizedContainerService.HintSize="416,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_6">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_6">AppResultsTable.Columns["AppID"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_6">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AppResultsTable.AppName column to String" sap:VirtualizedContainerService.HintSize="416,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_7">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_7">AppResultsTable.Columns["AppName"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_7">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AppResultsTable.Status column to String" sap:VirtualizedContainerService.HintSize="416,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_8">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_8">AppResultsTable.Columns["Status"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_8">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AppResultsTable.PassCount column to Int32" sap:VirtualizedContainerService.HintSize="416,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_9">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_9">AppResultsTable.Columns["PassCount"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_9">typeof(int)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AppResultsTable.FailCount column to Int32" sap:VirtualizedContainerService.HintSize="416,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_10">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_10">AppResultsTable.Columns["FailCount"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_10">typeof(int)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AppResultsTable.ScenarioCount column to Int32" sap:VirtualizedContainerService.HintSize="416,174.4" sap2010:WorkflowViewState.IdRef="Assign_new_type_11">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpReference_new_type_11">AppResultsTable.Columns["ScenarioCount"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type" sap2010:WorkflowViewState.IdRef="CSharpValue_new_type_11">typeof(int)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Assign in_Config MasterAppResults" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="Assign_42">
                         <Assign.To>
                           <OutArgument x:TypeArguments="x:Object">
-                            <CSharpReference x:TypeArguments="x:Object">in_Config["MasterAppResults"]</CSharpReference>
+                            <CSharpReference x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpReference`1_59">in_Config["MasterAppResults"]</CSharpReference>
                           </OutArgument>
                         </Assign.To>
                         <Assign.Value>
                           <InArgument x:TypeArguments="x:Object">
-                            <CSharpValue x:TypeArguments="x:Object">AppResultsTable</CSharpValue>
+                            <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_113">AppResultsTable</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                  </If.Then>
+                  <If.Else>
+                    <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="449.6,225.6" sap2010:WorkflowViewState.IdRef="Sequence_30">
+                      <sap:WorkflowViewStateService.ViewState>
+                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                        </scg:Dictionary>
+                      </sap:WorkflowViewStateService.ViewState>
+                      <Assign DisplayName="Assign AppResultsTable (existing)" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="Assign_43">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="sd:DataTable">
+                            <CSharpReference x:TypeArguments="sd:DataTable" sap2010:WorkflowViewState.IdRef="CSharpReference`1_60">AppResultsTable</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="sd:DataTable">
+                            <CSharpValue x:TypeArguments="sd:DataTable" sap2010:WorkflowViewState.IdRef="CSharpValue`1_114">(DataTable)in_Config["MasterAppResults"]</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                    </Sequence>
+                  </If.Else>
+                </If>
+                <ui:AddDataRow DataRow="{x:Null}" DisplayName="Add Data Row (MasterAppResults)" sap:VirtualizedContainerService.HintSize="451.2,211.2" sap2010:WorkflowViewState.IdRef="AddDataRow_8">
+                  <ui:AddDataRow.ArrayRow>
+                    <InArgument x:TypeArguments="s:Object[]">
+                      <CSharpValue x:TypeArguments="s:Object[]" sap2010:WorkflowViewState.IdRef="CSharpValue`1_115">new object[] {AppID, AppName, AppStatus, ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Pass"), ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Fail"), ScenarioResults.Rows.Count }</CSharpValue>
+                    </InArgument>
+                  </ui:AddDataRow.ArrayRow>
+                  <ui:AddDataRow.DataTable>
+                    <InOutArgument x:TypeArguments="sd:DataTable">
+                      <CSharpReference x:TypeArguments="sd:DataTable" sap2010:WorkflowViewState.IdRef="CSharpReference`1_61">AppResultsTable</CSharpReference>
+                    </InOutArgument>
+                  </ui:AddDataRow.DataTable>
+                </ui:AddDataRow>
+                <If DisplayName="If AllScenarioResults table does not exist yet">
+                  <If.Condition>
+                    <InArgument x:TypeArguments="x:Boolean">
+                      <CSharpValue x:TypeArguments="x:Boolean">!in_Config.ContainsKey("AllScenarioResults")</CSharpValue>
+                    </InArgument>
+                  </If.Condition>
+                  <If.Then>
+                    <Sequence DisplayName="Then">
+                      <sap:WorkflowViewStateService.ViewState>
+                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                        </scg:Dictionary>
+                      </sap:WorkflowViewStateService.ViewState>
+                      <ui:GenerateDataTable ColumnSeparators="{x:Null}" ColumnSizes="{x:Null}" NewLineSeparator="{x:Null}" Positions="{x:Null}" CSVParsing="True" DisplayName="Generate Data Table (AllScenarioResults header)" UseColumnHeader="True">
+                        <ui:GenerateDataTable.DataTable>
+                          <OutArgument x:TypeArguments="sd:DataTable">
+                            <CSharpReference x:TypeArguments="sd:DataTable">AllScenarioResultsTable</CSharpReference>
+                          </OutArgument>
+                        </ui:GenerateDataTable.DataTable>
+                        <ui:GenerateDataTable.Input>
+                          <InArgument x:TypeArguments="x:String">
+                            <CSharpValue x:TypeArguments="x:String">"AppID,AppName,ScenarioID,ScenarioName,Operation,Status,Details"</CSharpValue>
+                          </InArgument>
+                        </ui:GenerateDataTable.Input>
+                      </ui:GenerateDataTable>
+                      <Assign sap2010:Annotation.AnnotationText="Same GenerateDataTable header-only mistyping risk as ScenarioResults/AppResultsTable — force every column to String explicitly." DisplayName="Force AllScenarioResultsTable columns to String">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type">AllScenarioResultsTable.Columns["AppID"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AllScenarioResultsTable.AppName column to String">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type">AllScenarioResultsTable.Columns["AppName"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AllScenarioResultsTable.ScenarioID column to String">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type">AllScenarioResultsTable.Columns["ScenarioID"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AllScenarioResultsTable.ScenarioName column to String">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type">AllScenarioResultsTable.Columns["ScenarioName"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AllScenarioResultsTable.Operation column to String">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type">AllScenarioResultsTable.Columns["Operation"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AllScenarioResultsTable.Status column to String">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type">AllScenarioResultsTable.Columns["Status"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Force AllScenarioResultsTable.Details column to String">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="s:Type">
+                            <CSharpReference x:TypeArguments="s:Type">AllScenarioResultsTable.Columns["Details"].DataType</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="s:Type">
+                            <CSharpValue x:TypeArguments="s:Type">typeof(string)</CSharpValue>
+                          </InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <Assign DisplayName="Assign in_Config AllScenarioResults">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:Object">
+                            <CSharpReference x:TypeArguments="x:Object">in_Config["AllScenarioResults"]</CSharpReference>
+                          </OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:Object">
+                            <CSharpValue x:TypeArguments="x:Object">AllScenarioResultsTable</CSharpValue>
                           </InArgument>
                         </Assign.Value>
                       </Assign>
@@ -1228,46 +955,70 @@
                   </If.Then>
                   <If.Else>
                     <Sequence DisplayName="Else">
-                      <Assign DisplayName="Assign AppResultsTable (existing)">
+                      <sap:WorkflowViewStateService.ViewState>
+                        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                        </scg:Dictionary>
+                      </sap:WorkflowViewStateService.ViewState>
+                      <Assign DisplayName="Assign AllScenarioResultsTable (existing)">
                         <Assign.To>
                           <OutArgument x:TypeArguments="sd:DataTable">
-                            <CSharpReference x:TypeArguments="sd:DataTable">AppResultsTable</CSharpReference>
+                            <CSharpReference x:TypeArguments="sd:DataTable">AllScenarioResultsTable</CSharpReference>
                           </OutArgument>
                         </Assign.To>
                         <Assign.Value>
                           <InArgument x:TypeArguments="sd:DataTable">
-                            <CSharpValue x:TypeArguments="sd:DataTable">(DataTable)in_Config["MasterAppResults"]</CSharpValue>
+                            <CSharpValue x:TypeArguments="sd:DataTable">(DataTable)in_Config["AllScenarioResults"]</CSharpValue>
                           </InArgument>
                         </Assign.Value>
                       </Assign>
                     </Sequence>
                   </If.Else>
                 </If>
-                <uic:AddDataRow DisplayName="Add Data Row (MasterAppResults)">
-                  <uic:AddDataRow.DataTable>
-                    <InOutArgument x:TypeArguments="sd:DataTable">
-                      <CSharpReference x:TypeArguments="sd:DataTable">AppResultsTable</CSharpReference>
-                    </InOutArgument>
-                  </uic:AddDataRow.DataTable>
-                  <uic:AddDataRow.ArrayRow>
-                    <InArgument x:TypeArguments="s:Object[]">
-                      <CSharpValue x:TypeArguments="s:Object[]">new object[] {AppID, AppName, AppStatus, ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Pass"), ScenarioResults.AsEnumerable().Count(r =&gt; r.Field&lt;string&gt;("Status") == "Fail"), ScenarioResults.Rows.Count }</CSharpValue>
+                <ui:ForEachRow ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DisplayName="For each scenario (append to AllScenarioResultsTable)">
+                  <ui:ForEachRow.Body>
+                    <ActivityAction x:TypeArguments="sd:DataRow">
+                      <ActivityAction.Argument>
+                        <DelegateInArgument x:TypeArguments="sd:DataRow" Name="ScenarioRow" />
+                      </ActivityAction.Argument>
+                      <ui:AddDataRow DataRow="{x:Null}" DisplayName="Add Data Row (AllScenarioResultsTable)">
+                        <ui:AddDataRow.ArrayRow>
+                          <InArgument x:TypeArguments="s:Object[]">
+                            <CSharpValue x:TypeArguments="s:Object[]">new object[] {AppID, AppName, ScenarioRow["ScenarioID"], ScenarioRow["ScenarioName"], ScenarioRow["Operation"], ScenarioRow["Status"], ScenarioRow["Details"]}</CSharpValue>
+                          </InArgument>
+                        </ui:AddDataRow.ArrayRow>
+                        <ui:AddDataRow.DataTable>
+                          <InOutArgument x:TypeArguments="sd:DataTable">
+                            <CSharpReference x:TypeArguments="sd:DataTable">AllScenarioResultsTable</CSharpReference>
+                          </InOutArgument>
+                        </ui:AddDataRow.DataTable>
+                      </ui:AddDataRow>
+                    </ActivityAction>
+                  </ui:ForEachRow.Body>
+                  <ui:ForEachRow.DataTable>
+                    <InArgument x:TypeArguments="sd:DataTable">
+                      <CSharpValue x:TypeArguments="sd:DataTable">ScenarioResults</CSharpValue>
                     </InArgument>
-                  </uic:AddDataRow.ArrayRow>
-                </uic:AddDataRow>
+                  </ui:ForEachRow.DataTable>
+                </ui:ForEachRow>
               </Sequence>
             </TryCatch.Try>
             <TryCatch.Catches>
-              <Catch x:TypeArguments="s:Exception">
+              <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_5">
                 <ActivityAction x:TypeArguments="s:Exception">
                   <ActivityAction.Argument>
                     <DelegateInArgument x:TypeArguments="s:Exception" Name="exception" />
                   </ActivityAction.Argument>
-                  <Sequence DisplayName="Catch">
-                    <ui:LogMessage DisplayName="Log Message (history/master result recording failed)" Level="Warn">
+                  <Sequence DisplayName="Catch" sap:VirtualizedContainerService.HintSize="484.8,225.6" sap2010:WorkflowViewState.IdRef="Sequence_32">
+                    <sap:WorkflowViewStateService.ViewState>
+                      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                      </scg:Dictionary>
+                    </sap:WorkflowViewStateService.ViewState>
+                    <ui:LogMessage DisplayName="Log Message (history/master result recording failed)" sap:VirtualizedContainerService.HintSize="451.2,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_7" Level="Warn">
                       <ui:LogMessage.Message>
                         <InArgument x:TypeArguments="x:Object">
-                          <CSharpValue x:TypeArguments="x:Object">"Failed to record run history / master result for " + AppName + ": " + exception.Message</CSharpValue>
+                          <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_116">"Failed to record run history / master result for " + AppName + ": " + exception.Message</CSharpValue>
                         </InArgument>
                       </ui:LogMessage.Message>
                     </ui:LogMessage>
@@ -1275,11 +1026,20 @@
                 </ActivityAction>
               </Catch>
             </TryCatch.Catches>
+            <TryCatch.Finally>
+              <Sequence DisplayName="Finally" sap:VirtualizedContainerService.HintSize="484.8,89.6" sap2010:WorkflowViewState.IdRef="Sequence_38">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+              </Sequence>
+            </TryCatch.Finally>
           </TryCatch>
-          <ui:LogMessage DisplayName="Log Message (app health check complete)" Level="Info">
+          <ui:LogMessage DisplayName="Log Message (app health check complete)" sap:VirtualizedContainerService.HintSize="521.6,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_8" Level="Info">
             <ui:LogMessage.Message>
               <InArgument x:TypeArguments="x:Object">
-                <CSharpValue x:TypeArguments="x:Object">"Completed health check for " + AppName + " (" + AppID + ") — status: " + AppStatus</CSharpValue>
+                <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_117">"Completed health check for " + AppName + " (" + AppID + ") — status: " + AppStatus</CSharpValue>
               </InArgument>
             </ui:LogMessage.Message>
           </ui:LogMessage>

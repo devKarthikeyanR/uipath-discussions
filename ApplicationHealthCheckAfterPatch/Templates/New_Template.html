@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html lang="en" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WorkPlace Automation - Test Run Report</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style data-purpose="custom-colors">
+    :root {
+      --vanguard-navy: #001f4b;
+      --vanguard-bg: #f3f4f6;
+      --vanguard-border: #d1d5db;
+      --status-pass: #22c55e;
+      --status-fail: #ef4444;
+      --status-skip: #f59e0b;
+      --status-skip-dark: #4b5563;
+    }
+    body {
+      background-color: var(--vanguard-bg);
+      font-family: 'Work Sans', sans-serif;
+    }
+  </style>
+<style data-purpose="components" type="text/tailwindcss">
+    .card {
+      @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4;
+    }
+    .data-table {
+      @apply w-full text-sm text-left border-collapse;
+    }
+    .data-table th {
+      @apply bg-[#001f4b] text-white py-3 px-4 font-bold text-xs uppercase tracking-wider border-0;
+    }
+    .data-table td {
+      @apply py-3 px-4 border-b border-gray-200 bg-white;
+    }
+    .data-table tbody tr:last-child td {
+      @apply border-b-0;
+    }
+    
+    .pill {
+      @apply inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide min-w-[70px];
+    }
+    .pill-pass {
+      @apply bg-green-100 text-green-700 border border-green-200; /* As per image for EXECUTED */
+    }
+    .pill-pass-solid {
+      @apply bg-[#22c55e] text-white; /* For standard pass if needed */
+    }
+    .pill-fail {
+      @apply bg-[#ef4444] text-white;
+    }
+    .pill-skip-amber {
+      @apply bg-[#fef3c7] text-[#d97706] border border-[#fde68a]; /* As per image for SKIPPED run status */
+    }
+    .pill-skip-dark {
+      @apply bg-[#6b7280] text-white; /* As per image for SKIPPED test result */
+    }
+
+    .filter-chip {
+      @apply inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-colors border;
+    }
+    .filter-all.active {
+      @apply bg-[#001f4b] text-white border-[#001f4b];
+    }
+    .filter-pass {
+      @apply bg-[#f0fdf4] text-[#166534] border-[#bcf0da];
+    }
+    .filter-pass.active {
+      @apply bg-[#22c55e] text-white;
+    }
+    .filter-fail {
+      @apply bg-[#fef2f2] text-[#991b1b] border-[#fecaca];
+    }
+    .filter-fail.active {
+      @apply bg-[#ef4444] text-white;
+    }
+    .filter-skip {
+      @apply bg-[#f9fafb] text-[#374151] border-[#e5e7eb];
+    }
+    .filter-skip.active {
+      @apply bg-[#4b5563] text-white;
+    }
+  </style>
+</head>
+<body class="px-6 py-6">
+<div class="mx-auto space-y-8 w-full">
+<!-- BEGIN: MainHeader -->
+<header class="text-white rounded-xl p-6 shadow-md flex justify-between items-center bg-[#001f4b]">
+<div class="space-y-4">
+<h1 class="text-2xl font-bold">WorkPlace Automation - Test Run Report - RunInWindows</h1>
+<div class="text-sm text-gray-200 space-y-1">
+<p class="">Project: <span class="font-medium">WorkPlaceAutomation</span> - Entry: <span class="bg-gray-200 text-gray-800 px-1 py-0.5 rounded text-xs">Tests/RunTests.xaml</span> - Machine: <span class="font-medium">VG-5CG4125TH0</span> - User: <span class="font-medium">uj86</span></p>
+<p class="">Started: <span class="font-medium">2026-08-20 11:49:39</span> - Ended: <span class="font-medium">2026-08-20 11:51:50</span> - Duration: <span class="font-medium">00:02:11</span></p>
+</div>
+<div class="inline-block bg-white text-red-700 rounded-full px-4 py-1 text-sm font-bold tracking-wide mt-2">
+          OVERALL RESULT: FAILED
+        </div>
+</div>
+<div class="flex items-center space-x-8">
+<!-- Donut Chart Placeholder -->
+<div class="relative w-24 h-24 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<!-- Background circle (light grey/blue) -->
+<circle class="text-gray-300" cx="18" cy="18" fill="none" r="15.9155" stroke="currentColor" stroke-width="3.5"></circle>
+<!-- Active segment (red for 0% pass rate/failure) -->
+<circle class="text-red-500" cx="18" cy="18" fill="none" r="15.9155" stroke="currentColor" stroke-dasharray="25 75" stroke-linecap="round" stroke-width="3.5"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-xl font-bold text-white">0%</span>
+<span class="text-[10px] text-gray-300">pass rate</span>
+</div>
+</div>
+<!-- Legend -->
+<div class="text-sm space-y-2">
+<div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-green-500 mr-2 block"></span> PASS: 0</div>
+<div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-red-500 mr-2 block"></span> FAIL: 1</div>
+<div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-gray-300 mr-2 block"></span> SKIPPED: 4</div>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: SystemInformation -->
+<section class="space-y-4 pt-4 border-t border-gray-300 mt-6">
+<h2 class="text-lg font-bold text-gray-800">SystemInformation Files and Diff Artifacts</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="card bg-gray-50 border border-gray-300 shadow-none rounded-lg p-4">
+<a class="text-blue-600 hover:underline font-medium" href="#">SystemInformation.xlsx</a>
+<p class="text-xs text-gray-500 mt-1">System information snapshot captured during this run.</p>
+</div>
+<div class="card bg-gray-50 border border-gray-300 shadow-none rounded-lg p-4">
+<a class="text-blue-600 hover:underline font-medium" href="#">SystemInformation_baseline.xlsx</a>
+<p class="text-xs text-gray-500 mt-1">Active baseline used for comparison in this run.</p>
+</div>
+<div class="card bg-gray-50 border border-gray-300 shadow-none rounded-lg p-4">
+<a class="text-blue-600 hover:underline font-medium" href="#">SystemInformation_Differences.xlsx</a>
+<p class="text-xs text-gray-500 mt-1">Field-level diff between snapshot and baseline for this run.</p>
+</div>
+</div>
+<h2 class="text-lg font-bold text-gray-800 mt-8 mb-2">SystemInformation Differences</h2>
+<div class="flex flex-col gap-6"><!-- Summary Table -->
+<div class="flex flex-col md:flex-row gap-6">
+<div class="w-full md:w-1/3">
+<h3 class="text-sm font-semibold text-gray-700 mb-2">Summary</h3>
+<div class="border border-gray-300 rounded-lg overflow-hidden bg-white">
+<table class="data-table">
+<thead>
+<tr>
+<th class="">DESCRIPTION</th>
+<th class="text-right">COUNT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="text-gray-600">Applications Changed #</td>
+<td class="text-right text-gray-600">0</td>
+</tr>
+<tr>
+<td class="text-gray-600">Applications Added #</td>
+<td class="text-right text-gray-600">0</td>
+</tr>
+<tr>
+<td class="text-gray-600">Applications Removed #</td>
+<td class="text-right text-gray-600">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Changed Applications Table -->
+<div class="w-full md:w-2/3">
+<h3 class="text-sm font-semibold text-gray-700 mb-2">Changed Applications</h3>
+<div class="border border-gray-300 rounded-lg overflow-hidden bg-white h-full">
+<table class="data-table h-full">
+<thead>
+<tr>
+<th class="">APPLICATION NAME</th>
+<th class="">VERSION</th>
+<th class="">OLD_VERSION</th>
+<th class="">NEW_VERSION</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="text-gray-500 py-4" colspan="4">No application-level differences detected in this run.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div></div>
+</section>
+<!-- END: SystemInformation -->
+<!-- BEGIN: Run Tables -->
+<section class="space-y-6 border-t border-gray-300 pt-6 mt-6">
+<h2 class="text-lg font-bold text-gray-800">Filter Run Table</h2>
+<!-- Filters -->
+<div class="flex space-x-2">
+<button class="filter-chip filter-all active">All (5)</button>
+<button class="filter-chip filter-pass">PASS (0)</button>
+<button class="filter-chip filter-fail">FAIL (1)</button>
+<button class="filter-chip filter-skip">SKIPPED (4)</button>
+</div>
+<p class="text-xs text-gray-500">Click a chip to filter the Application Run table below.</p>
+<!-- Metrics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+<div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+<span class="text-2xl font-bold text-gray-900">5</span>
+<span class="text-xs text-gray-500 uppercase font-semibold mt-1 flex items-center">Application Rows</span>
+</div>
+<div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+<span class="text-2xl font-bold text-gray-900">1</span>
+<span class="text-xs text-gray-500 uppercase font-semibold mt-1 flex items-center">Apps Run</span>
+</div>
+<div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+<span class="text-2xl font-bold text-gray-900">00:02:11</span>
+<span class="text-xs text-gray-500 uppercase font-semibold mt-1 flex items-center">Total Time</span>
+</div>
+</div>
+<!-- Application Run Table -->
+<div class="mt-6">
+<h3 class="text-md font-bold text-gray-800 mb-2">Application Run</h3>
+<div class="border border-gray-300 rounded-lg overflow-hidden bg-white">
+<table class="data-table">
+<thead>
+<tr>
+<th class="w-12 text-center">#</th>
+<th class="">APPLICATION</th>
+<th class="">ENV - MACHINE</th>
+<th class="text-center">TEST RESULT ?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="text-center text-gray-500 w-12">1</td>
+<td class="text-gray-700">MSTeams</td>
+<td class="text-gray-500">-</td>
+<td class="text-center text-gray-500">-</td>
+</tr>
+<tr>
+<td class="text-center text-gray-500 w-12">2</td>
+<td class="text-blue-600 font-medium">Outlook</td>
+<td class="text-gray-700">Windows - VG-5CG4125TH0</td>
+<td class="text-center"><span class="pill pill-fail">FAIL</span></td>
+</tr>
+<tr>
+<td class="text-center text-gray-500 w-12">3</td>
+<td class="text-gray-700">Edge</td>
+<td class="text-gray-500">-</td>
+<td class="text-center text-gray-500">-</td>
+</tr>
+<tr>
+<td class="text-center text-gray-500 w-12">4</td>
+<td class="text-gray-700">Chrome</td>
+<td class="text-gray-500">-</td>
+<td class="text-center text-gray-500">-</td>
+</tr>
+<tr>
+<td class="text-center text-gray-500 w-12">5</td>
+<td class="text-gray-700">Safari</td>
+<td class="text-gray-500">-</td>
+<td class="text-center text-gray-500">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- END: Run Tables -->
+<!-- BEGIN: Application Test Flows -->
+<section class="space-y-8 pt-4">
+<!-- Outlook Flow -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<h3 class="text-md font-bold text-gray-800">Application Test Flow - Outlook</h3>
+<div class="flex space-x-1 scale-90 origin-bottom-right">
+<button class="filter-chip filter-all active py-1 px-3">All (2)</button>
+<button class="filter-chip filter-pass py-1 px-3">PASS (0)</button>
+<button class="filter-chip filter-fail py-1 px-3">FAIL (1)</button>
+<button class="filter-chip filter-skip py-1 px-3">SKIPPED (1)</button>
+</div>
+</div>
+<div class="border border-gray-300 rounded-lg overflow-hidden bg-white">
+<table class="data-table">
+<thead>
+<tr>
+<th class="w-12 text-center">#</th>
+<th class="">APPLICATION TEST FLOW</th>
+<th class="">ENABLED</th>
+<th class="">RUN STATUS</th>
+<th class="">TEST RESULT</th>
+<th class="">FAILURE REASON</th>
+<th class="">FAILURE SCREENSHOT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="text-center text-gray-500 w-12">1</td>
+<td class="text-blue-600 font-medium">SendOutlookMessage</td>
+<td class="text-gray-700">Yes</td>
+<td class=""><span class="pill pill-pass">EXECUTED</span></td>
+<td class=""><span class="pill pill-fail">FAIL</span></td>
+<td class="text-gray-500">-</td>
+<td class=""><a class="text-blue-600 hover:underline" href="#">View</a></td>
+</tr>
+<tr>
+<td class="text-center text-gray-500 w-12">2</td>
+<td class="text-blue-600 font-medium">SendOutlookMessageWithAttachment</td>
+<td class="text-gray-700">No</td>
+<td class=""><span class="pill pill-skip-amber">SKIPPED</span></td>
+<td class=""><span class="pill pill-skip-dark">SKIPPED</span></td>
+<td class="text-gray-500">-</td>
+<td class="text-gray-500">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Edge Flow -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<h3 class="text-md font-bold text-gray-800">Application Test Flow - Edge</h3>
+<div class="flex space-x-1 scale-90 origin-bottom-right">
+<button class="filter-chip filter-all active py-1 px-3">All (0)</button>
+<button class="filter-chip filter-pass py-1 px-3">PASS (0)</button>
+<button class="filter-chip filter-fail py-1 px-3">FAIL (0)</button>
+<button class="filter-chip filter-skip py-1 px-3">SKIPPED (0)</button>
+</div>
+</div>
+<div class="border border-gray-300 rounded-lg overflow-hidden bg-white">
+<table class="data-table">
+<thead>
+<tr>
+<th class="w-12 text-center">#</th>
+<th class="">APPLICATION TEST FLOW</th>
+<th class="">ENABLED</th>
+<th class="">SECONDARY OPERATION</th>
+<th class="">RUN STATUS</th>
+<th class="">TEST RESULT</th>
+<th class="">FAILURE REASON</th>
+<th class="">FAILURE SCREENSHOT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="text-gray-500 py-4" colspan="8">No test flows have been configured or run for Edge yet.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Chrome Flow -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<h3 class="text-md font-bold text-gray-800">Application Test Flow - Chrome</h3>
+<div class="flex space-x-1 scale-90 origin-bottom-right">
+<button class="filter-chip filter-all active py-1 px-3">All (0)</button>
+<button class="filter-chip filter-pass py-1 px-3">PASS (0)</button>
+<button class="filter-chip filter-fail py-1 px-3">FAIL (0)</button>
+<button class="filter-chip filter-skip py-1 px-3">SKIPPED (0)</button>
+</div>
+</div>
+<div class="border border-gray-300 rounded-lg overflow-hidden bg-white">
+<table class="data-table">
+<thead>
+<tr>
+<th class="w-12 text-center">#</th>
+<th class="">APPLICATION TEST FLOW</th>
+<th class="">ENABLED</th>
+<th class="">SECONDARY OPERATION</th>
+<th class="">RUN STATUS</th>
+<th class="">TEST RESULT</th>
+<th class="">FAILURE REASON</th>
+<th class="">FAILURE SCREENSHOT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="text-gray-500 py-4" colspan="8">No test flows have been configured or run for Chrome yet.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- END: Application Test Flows -->
+<footer class="text-center text-xs text-gray-400 py-8">
+      Generated automatically by RunTests.xaml - 2026-08-20 11:51:50
+    </footer>
+</div>
+</body></html>

@@ -1,4 +1,4 @@
-<Activity mc:Ignorable="sap sap2010" x:Class="Applications_Outlook_Outlook_VerifyReceive" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uix="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Activity mc:Ignorable="sap sap2010" x:Class="Applications_Outlook_Outlook_VerifyReceive" this:Applications_Outlook_Outlook_VerifyReceive.in_TimeoutSec="0" this:Applications_Outlook_Outlook_VerifyReceive.in_PollIntervalSec="0" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Drawing;assembly=System.Drawing.Common" xmlns:sd1="clr-namespace:System.Drawing;assembly=System.Drawing.Primitives" xmlns:this="clr-namespace:" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uix="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Members>
     <x:Property sap2010:Annotation.AnnotationText="The correlation token that must appear in a received email's subject (format HC-{RunID}-{AppID}-{ScenarioID}-{timestamp})." Name="in_CorrelationToken" Type="InArgument(x:String)" />
     <x:Property sap2010:Annotation.AnnotationText="Maximum time (seconds) to keep polling the inbox before giving up." Name="in_TimeoutSec" Type="InArgument(x:Int32)" />
@@ -7,15 +7,33 @@
     <x:Property sap2010:Annotation.AnnotationText="The subject line of the matched email, for evidence/logging." Name="out_MatchedSubject" Type="OutArgument(x:String)" />
   </x:Members>
   <sap2010:ExpressionActivityEditor.ExpressionActivityEditor>C#</sap2010:ExpressionActivityEditor.ExpressionActivityEditor>
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
   <TextExpression.NamespacesForImplementation>
     <sco:Collection x:TypeArguments="x:String">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
       <x:String>System</x:String>
       <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
       <x:String>System.Linq</x:String>
       <x:String>UiPath.Core</x:String>
       <x:String>UiPath.Core.Activities</x:String>
-      <x:String>GlobalVariablesNamespace</x:String>
-      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Reflection</x:String>
+      <x:String>UiPath.UIAutomationNext.Enums</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>UiPath.UIAutomationNext.Activities.Models</x:String>
+      <x:String>UiPath.UIAutomationNext.Contracts</x:String>
+      <x:String>System.Runtime.Serialization</x:String>
+      <x:String>System.Drawing</x:String>
+      <x:String>UiPath.UIAutomationNext.Models.CV</x:String>
+      <x:String>UiPath.UIAutomationCore.Contracts</x:String>
+      <x:String>UiPath.UIAutomationNext.Activities</x:String>
+      <x:String>UiPath.Shared.Activities</x:String>
+      <x:String>UiPath.Platform.ObjectLibrary</x:String>
+      <x:String>UiPath.Platform.SyncObjects</x:String>
+      <x:String>System.ComponentModel</x:String>
+      <x:String>System.Activities.Statements</x:String>
     </sco:Collection>
   </TextExpression.NamespacesForImplementation>
   <TextExpression.ReferencesForImplementation>
@@ -30,132 +48,212 @@
       <AssemblyReference>UiPath.System.Activities</AssemblyReference>
       <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
       <AssemblyReference>UiPath.UIAutomationNext.Activities</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>System.Reflection.DispatchProxy</AssemblyReference>
+      <AssemblyReference>System.Reflection.TypeExtensions</AssemblyReference>
+      <AssemblyReference>System.Reflection.Metadata</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationNext</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.Collections.NonGeneric</AssemblyReference>
+      <AssemblyReference>System.Private.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.Private.DataContractSerialization</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Formatters</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Primitives</AssemblyReference>
+      <AssemblyReference>System.Drawing.Primitives</AssemblyReference>
+      <AssemblyReference>System.Drawing.Common</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationCore</AssemblyReference>
+      <AssemblyReference>UiPath.Testing.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.OCR.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Platform</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.EventBasedAsync</AssemblyReference>
+      <AssemblyReference>PresentationFramework</AssemblyReference>
+      <AssemblyReference>WindowsBase</AssemblyReference>
+      <AssemblyReference>System.ComponentModel</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.Primitives</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <Sequence DisplayName="Outlook Verify Receive" sap2010:Annotation.AnnotationText="Polls the Outlook Classic Inbox for an email whose subject contains the correlation token, up to in_TimeoutSec at in_PollIntervalSec intervals. All Click/Get Text targets are placeholders — a developer must run Indicate against a real Outlook Classic instance.">
+  <Sequence sap2010:Annotation.AnnotationText="Polls the Outlook Classic Inbox for an email whose subject contains the correlation token, up to in_TimeoutSec at in_PollIntervalSec intervals. All Click/Get Text targets are placeholders — a developer must run Indicate against a real Outlook Classic instance." DisplayName="Outlook Verify Receive" sap:VirtualizedContainerService.HintSize="790.8000000000001,2370.4" sap2010:WorkflowViewState.IdRef="Sequence_5">
     <Sequence.Variables>
       <Variable x:TypeArguments="s:DateTime" Name="StartTime" />
-      <Variable x:TypeArguments="x:Boolean" Name="Found" Default="False" />
-      <Variable x:TypeArguments="x:String" Name="MatchedSubject" Default="&quot;&quot;" />
-      <Variable x:TypeArguments="x:String" Name="InboxText" Default="&quot;&quot;" />
+      <Variable x:TypeArguments="x:Boolean" Default="False" Name="Found" />
+      <Variable x:TypeArguments="x:String" Name="MatchedSubject">
+        <Variable.Default>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_14">"\"\""</CSharpValue>
+        </Variable.Default>
+      </Variable>
+      <Variable x:TypeArguments="x:String" Name="InboxText">
+        <Variable.Default>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_16">"\"\""</CSharpValue>
+        </Variable.Default>
+      </Variable>
     </Sequence.Variables>
-    <Assign DisplayName="Assign StartTime">
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <Assign DisplayName="Assign StartTime" sap:VirtualizedContainerService.HintSize="486.4,174.4" sap2010:WorkflowViewState.IdRef="Assign_1">
       <Assign.To>
         <OutArgument x:TypeArguments="s:DateTime">
-          <CSharpReference x:TypeArguments="s:DateTime">StartTime</CSharpReference>
+          <CSharpReference x:TypeArguments="s:DateTime" sap2010:WorkflowViewState.IdRef="CSharpReference`1_1">StartTime</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="s:DateTime">
-          <CSharpValue x:TypeArguments="s:DateTime">DateTime.Now</CSharpValue>
+          <CSharpValue x:TypeArguments="s:DateTime" sap2010:WorkflowViewState.IdRef="CSharpValue`1_1">DateTime.Now</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <ui:InterruptibleWhile DisplayName="Poll inbox until found or timeout">
-      <ui:InterruptibleWhile.Condition>
-        <CSharpValue x:TypeArguments="x:Boolean">!Found &amp;&amp; (DateTime.Now - StartTime).TotalSeconds &lt; in_TimeoutSec</CSharpValue>
-      </ui:InterruptibleWhile.Condition>
+    <ui:InterruptibleWhile CurrentIndex="{x:Null}" DisplayName="Poll inbox until found or timeout" sap:VirtualizedContainerService.HintSize="486.4,1658.4" sap2010:WorkflowViewState.IdRef="InterruptibleWhile_1">
       <ui:InterruptibleWhile.Body>
-        <Sequence DisplayName="Body">
-          <uix:NApplicationCard DisplayName="TODO Indicate — Use Application/Browser (attach Outlook Classic to poll inbox)" AttachMode="ByInstance" OpenMode="Never" CloseMode="Never" HealingAgentBehavior="Job" IsDisplayNameAuto="False" ScopeGuid="c1a1e001-0001-4a11-8a11-0000000000d1" Version="V2">
+        <Sequence DisplayName="Body" sap:VirtualizedContainerService.HintSize="484.8,1528" sap2010:WorkflowViewState.IdRef="Sequence_4">
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use ApplicationBrowser (attac" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="451.2,764.8" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="c1a1e001-0001-4a11-8a11-0000000000d1" Version="V2">
             <uix:NApplicationCard.Body>
               <ActivityAction x:TypeArguments="x:Object">
                 <ActivityAction.Argument>
                   <DelegateInArgument x:TypeArguments="x:Object" Name="WSSessionData" />
                 </ActivityAction.Argument>
-                <Sequence DisplayName="Do">
-                  <uix:NClick DisplayName="TODO Indicate — Click Inbox folder" ActivateBefore="True" ClickType="Single" HealingAgentBehavior="SameAsCard" KeyModifiers="None" MouseButton="Left" Version="V5" />
-                  <uix:NGetText DisplayName="TODO Indicate — Read Inbox subject list / latest email subject" HealingAgentBehavior="SameAsCard" Version="V5">
+                <Sequence DisplayName="Do" sap:VirtualizedContainerService.HintSize="449.6,509.6" sap2010:WorkflowViewState.IdRef="Sequence_1">
+                  <sap:WorkflowViewStateService.ViewState>
+                    <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                      <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                    </scg:Dictionary>
+                  </sap:WorkflowViewStateService.ViewState>
+                  <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="Click Inbox folder" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="c1a1e001-0001-4a11-8a11-0000000000d1" Version="V5">
+                    <uix:NClick.Target>
+                      <uix:TargetAnchorable DesignTimeRectangle="80, 545, 236, 46" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Navigation pane' role='pane' /&gt;&lt;ctrl name='ramamoorthy.karthikeyan@outlook.com' role='grouping' /&gt;&lt;ctrl name='Inbox*' role='outline item' /&gt;" Guid="a08c7757-457c-4c22-8694-a5648c6ed6d1" InformativeScreenshot="8549262d3e11d587e846225a47d7a4a0.jpg" ScopeSelectorArgument="&lt;wnd app='olk.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NClick.Target>
+                  </uix:NClick>
+                  <Delay Duration="00:01:00" sap:VirtualizedContainerService.HintSize="416,122.4" sap2010:WorkflowViewState.IdRef="Delay_2" />
+                  <uix:NGetText DisplayName="Read Inbox subject list / latest email subject" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,133.6" sap2010:WorkflowViewState.IdRef="NGetText_3" ScopeIdentifier="c1a1e001-0001-4a11-8a11-0000000000d1" ScrapingMethod="Fulltext" ScrapingOptions="None" Version="V5">
+                    <uix:NGetText.Target>
+                      <uix:TargetAnchorable DesignTimeRectangle="335, 253, 560, 778" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Message list' role='grouping' /&gt;" Guid="d47cfd61-f9eb-4c77-ad72-a7e8f6c6abd2" InformativeScreenshot="5a4f4e74236505ddc9a25a10f44a93b7.jpg" ScopeSelectorArgument="&lt;wnd app='olk.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+                    </uix:NGetText.Target>
                     <uix:NGetText.TextString>
                       <OutArgument x:TypeArguments="x:String">
-                        <CSharpReference x:TypeArguments="x:String">InboxText</CSharpReference>
+                        <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_9">InboxText</CSharpReference>
                       </OutArgument>
                     </uix:NGetText.TextString>
                   </uix:NGetText>
                 </Sequence>
               </ActivityAction>
             </uix:NApplicationCard.Body>
+            <uix:NApplicationCard.OCREngine>
+              <ActivityFunc x:TypeArguments="sd:Image, scg:IEnumerable(scg:KeyValuePair(sd1:Rectangle, x:String))">
+                <ActivityFunc.Argument>
+                  <DelegateInArgument x:TypeArguments="sd:Image" Name="Image" />
+                </ActivityFunc.Argument>
+              </ActivityFunc>
+            </uix:NApplicationCard.OCREngine>
             <uix:NApplicationCard.TargetApp>
-              <uix:TargetApp Area="0, 0, 0, 0" Version="V3" />
+              <uix:TargetApp Area="-9, -9, 1938, 1038" FilePath="Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows" IconBase64="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" InformativeScreenshot="cd14e0fe49977b4c263549a32791e93e.jpg" Selector="&lt;wnd app='olk.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;" Version="V3">
+                <uix:TargetApp.Arguments>
+                  <InArgument x:TypeArguments="x:String" />
+                </uix:TargetApp.Arguments>
+                <uix:TargetApp.WorkingDirectory>
+                  <InArgument x:TypeArguments="x:String" />
+                </uix:TargetApp.WorkingDirectory>
+              </uix:TargetApp>
             </uix:NApplicationCard.TargetApp>
           </uix:NApplicationCard>
-          <If DisplayName="If inbox text contains the correlation token">
+          <If DisplayName="If inbox text contains the correlation token" sap:VirtualizedContainerService.HintSize="451.2,703.2" sap2010:WorkflowViewState.IdRef="If_1">
             <If.Condition>
               <InArgument x:TypeArguments="x:Boolean">
-                <CSharpValue x:TypeArguments="x:Boolean">!string.IsNullOrEmpty(InboxText) &amp;&amp; InboxText.Contains(in_CorrelationToken)</CSharpValue>
+                <CSharpValue x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpValue`1_2">!string.IsNullOrEmpty(InboxText) &amp;&amp; InboxText.Contains(in_CorrelationToken)</CSharpValue>
               </InArgument>
             </If.Condition>
             <If.Then>
-              <Sequence DisplayName="Then">
-                <Assign DisplayName="Assign Found">
+              <Sequence DisplayName="Then" sap:VirtualizedContainerService.HintSize="449.6,400" sap2010:WorkflowViewState.IdRef="Sequence_2">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+                <Assign DisplayName="Assign Found" sap:VirtualizedContainerService.HintSize="416,174.4" sap2010:WorkflowViewState.IdRef="Assign_2">
                   <Assign.To>
                     <OutArgument x:TypeArguments="x:Boolean">
-                      <CSharpReference x:TypeArguments="x:Boolean">Found</CSharpReference>
+                      <CSharpReference x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpReference`1_3">Found</CSharpReference>
                     </OutArgument>
                   </Assign.To>
                   <Assign.Value>
                     <InArgument x:TypeArguments="x:Boolean">
-                      <CSharpValue x:TypeArguments="x:Boolean">true</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpValue`1_3">true</CSharpValue>
                     </InArgument>
                   </Assign.Value>
                 </Assign>
-                <Assign DisplayName="Assign MatchedSubject">
+                <Assign DisplayName="Assign MatchedSubject" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="Assign_3">
                   <Assign.To>
                     <OutArgument x:TypeArguments="x:String">
-                      <CSharpReference x:TypeArguments="x:String">MatchedSubject</CSharpReference>
+                      <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_8">MatchedSubject</CSharpReference>
                     </OutArgument>
                   </Assign.To>
                   <Assign.Value>
                     <InArgument x:TypeArguments="x:String">
-                      <CSharpValue x:TypeArguments="x:String">InboxText</CSharpValue>
+                      <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_17">InboxText</CSharpValue>
                     </InArgument>
                   </Assign.Value>
                 </Assign>
               </Sequence>
             </If.Then>
             <If.Else>
-              <Sequence DisplayName="Else">
-                <Delay DisplayName="Delay (poll interval)">
-                  <Delay.Duration>
-                    <InArgument x:TypeArguments="s:TimeSpan">
-                      <CSharpValue x:TypeArguments="s:TimeSpan">TimeSpan.FromSeconds(in_PollIntervalSec)</CSharpValue>
-                    </InArgument>
-                  </Delay.Duration>
+              <Sequence DisplayName="Else" sap:VirtualizedContainerService.HintSize="449.6,173.6" sap2010:WorkflowViewState.IdRef="Sequence_3">
+                <sap:WorkflowViewStateService.ViewState>
+                  <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                    <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+                  </scg:Dictionary>
+                </sap:WorkflowViewStateService.ViewState>
+                <Delay DisplayName="Delay (poll interval)" sap:VirtualizedContainerService.HintSize="416,113.6" sap2010:WorkflowViewState.IdRef="Delay_1">
+                  <InArgument x:TypeArguments="x:TimeSpan">
+                    <CSharpValue x:TypeArguments="x:TimeSpan" sap2010:WorkflowViewState.IdRef="CSharpValue`1_5">TimeSpan.FromSeconds(in_PollIntervalSec)</CSharpValue>
+                  </InArgument>
                 </Delay>
               </Sequence>
             </If.Else>
           </If>
         </Sequence>
       </ui:InterruptibleWhile.Body>
+      <ui:InterruptibleWhile.Condition>
+        <CSharpValue x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpValue`1_6">!Found &amp;&amp; (DateTime.Now - StartTime).TotalSeconds &lt; in_TimeoutSec</CSharpValue>
+      </ui:InterruptibleWhile.Condition>
     </ui:InterruptibleWhile>
-    <Assign DisplayName="Assign out_Found">
+    <Assign DisplayName="Assign out_Found" sap:VirtualizedContainerService.HintSize="486.4,174.4" sap2010:WorkflowViewState.IdRef="Assign_4">
       <Assign.To>
         <OutArgument x:TypeArguments="x:Boolean">
-          <CSharpReference x:TypeArguments="x:Boolean">out_Found</CSharpReference>
+          <CSharpReference x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpReference`1_5">out_Found</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:Boolean">
-          <CSharpValue x:TypeArguments="x:Boolean">Found</CSharpValue>
+          <CSharpValue x:TypeArguments="x:Boolean" sap2010:WorkflowViewState.IdRef="CSharpValue`1_7">Found</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign out_MatchedSubject">
+    <Assign DisplayName="Assign out_MatchedSubject" sap:VirtualizedContainerService.HintSize="486.4,174.4" sap2010:WorkflowViewState.IdRef="Assign_5">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
-          <CSharpReference x:TypeArguments="x:String">out_MatchedSubject</CSharpReference>
+          <CSharpReference x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpReference`1_6">out_MatchedSubject</CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String">MatchedSubject</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_15">MatchedSubject</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>
-    <ui:LogMessage DisplayName="Log Message (verify receive result)" Level="Info">
+    <ui:LogMessage DisplayName="Log Message (verify receive result)" sap:VirtualizedContainerService.HintSize="486.4,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info">
       <ui:LogMessage.Message>
         <InArgument x:TypeArguments="x:Object">
-          <CSharpValue x:TypeArguments="x:Object">"Verify Receive for token " + in_CorrelationToken + ": " + (Found ? "FOUND" : "NOT FOUND (timeout)")</CSharpValue>
+          <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_9">"Verify Receive for token " + in_CorrelationToken + ": " + (Found ? "FOUND" : "NOT FOUND (timeout)")</CSharpValue>
         </InArgument>
       </ui:LogMessage.Message>
     </ui:LogMessage>

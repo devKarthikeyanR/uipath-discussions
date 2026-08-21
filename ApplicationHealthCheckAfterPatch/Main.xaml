@@ -1041,6 +1041,9 @@
                                                 <InArgument x:TypeArguments="sd:DataTable" x:Key="in_AppResults">
                                                   <CSharpValue x:TypeArguments="sd:DataTable">(System.Data.DataTable)Config["MasterAppResults"]</CSharpValue>
                                                 </InArgument>
+                                                <InArgument x:TypeArguments="sd:DataTable" x:Key="in_ScenarioResultsByApp">
+                                                  <CSharpValue x:TypeArguments="sd:DataTable">Config.ContainsKey("AllScenarioResults") ? (System.Data.DataTable)Config["AllScenarioResults"] : null</CSharpValue>
+                                                </InArgument>
                                                 <InArgument x:TypeArguments="x:String" x:Key="in_TemplatePath">
                                                   <CSharpValue x:TypeArguments="x:String">"Templates\\MasterReportTemplate.html"</CSharpValue>
                                                 </InArgument>

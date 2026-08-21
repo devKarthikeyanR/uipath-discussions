@@ -1,24 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Application Health Check — Master Report</title>
-<style>
-  body { font-family: Segoe UI, Arial, sans-serif; color: #222; }
-  h1 { font-size: 20px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 12px; }
-  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 13px; }
-  th { background-color: #eeeeee; }
-  .pass { color: #1a7a1a; font-weight: bold; }
-  .fail { color: #b00020; font-weight: bold; }
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>Application Health Check - Master Report</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style data-purpose="custom-colors">
+  :root {
+    --vanguard-navy: #001f4b;
+    --vanguard-bg: #f3f4f6;
+    --vanguard-border: #d1d5db;
+    --status-pass: #22c55e;
+    --status-fail: #ef4444;
+    --status-skip: #f59e0b;
+    --status-skip-dark: #4b5563;
+  }
+  body {
+    background-color: var(--vanguard-bg);
+    font-family: 'Work Sans', sans-serif;
+  }
+</style>
+<style data-purpose="components" type="text/tailwindcss">
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all duration-200;
+  }
+  .card:hover {
+    @apply shadow-md -translate-y-0.5 border-gray-300;
+  }
+  .data-table {
+    @apply w-full text-sm text-left border-collapse;
+  }
+  .data-table th {
+    @apply bg-[#001f4b] text-white py-3 px-4 font-bold text-xs uppercase tracking-wider border-0;
+  }
+  .data-table td {
+    @apply py-3 px-4 border-b border-gray-200 bg-white;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .pill {
+    @apply inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide min-w-[70px] transition-transform duration-150;
+  }
+  .pill-pass {
+    @apply bg-green-100 text-green-700 border border-green-200;
+  }
+  .pill-fail {
+    @apply bg-[#ef4444] text-white;
+  }
+  tr:hover .pill {
+    @apply scale-105;
+  }
+  .filter-chip {
+    @apply inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all duration-150 border;
+  }
+  .filter-chip:hover {
+    @apply shadow-sm -translate-y-px;
+  }
+  .filter-all.active {
+    @apply bg-[#001f4b] text-white border-[#001f4b];
+  }
+  .filter-pass {
+    @apply bg-[#f0fdf4] text-[#166534] border-[#bcf0da];
+  }
+  .filter-pass.active {
+    @apply bg-[#22c55e] text-white;
+  }
+  .filter-fail {
+    @apply bg-[#fef2f2] text-[#991b1b] border-[#fecaca];
+  }
+  .filter-fail.active {
+    @apply bg-[#ef4444] text-white;
+  }
+  tr[data-row-type="app"] td:first-child {
+    @apply relative;
+  }
+  .chevron {
+    @apply text-gray-400;
+  }
+  tr[data-row-type="app"]:hover .chevron {
+    @apply text-[#001f4b];
+  }
 </style>
 </head>
-<body>
-  <h1>Application Health Check — Master Report</h1>
-  <p>Run ID: {{RUN_ID}} &nbsp;|&nbsp; Generated: {{TIMESTAMP}}</p>
-  <table>
-    <tr><th>App ID</th><th>App Name</th><th>Status</th><th>Scenarios Passed</th><th>Scenarios Failed</th><th>Total Scenarios</th></tr>
-    {{APP_ROWS}}
-  </table>
+<body class="px-6 py-6">
+<div class="mx-auto space-y-8 w-full">
+<!-- BEGIN: MainHeader -->
+<header class="text-white rounded-xl p-6 shadow-md flex justify-between items-center bg-[#001f4b]">
+  <div class="space-y-4">
+    <h1 class="text-2xl font-bold">Application Health Check - Master Report</h1>
+    <div class="text-sm text-gray-200 space-y-1">
+      <p>Run ID: <span class="font-medium">{{RUN_ID}}</span></p>
+      <p>Generated: <span class="font-medium">{{TIMESTAMP}}</span></p>
+    </div>
+    <div class="inline-block bg-white rounded-full px-4 py-1 text-sm font-bold tracking-wide mt-2 {{OVERALL_STATUS_TEXT_CLASS}}">
+      OVERALL RESULT: {{OVERALL_STATUS}}
+    </div>
+  </div>
+  <div class="flex items-center space-x-8">
+    <div class="relative w-24 h-24 flex items-center justify-center">
+      <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+        <circle class="text-gray-300" cx="18" cy="18" fill="none" r="15.9155" stroke="currentColor" stroke-width="3.5"></circle>
+        <circle class="{{DONUT_COLOR_CLASS}}" cx="18" cy="18" fill="none" r="15.9155" stroke="currentColor" stroke-dasharray="{{DONUT_DASHARRAY}}" stroke-linecap="round" stroke-width="3.5"></circle>
+      </svg>
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <span class="text-xl font-bold text-white">{{APP_PASS_RATE}}%</span>
+        <span class="text-[10px] text-gray-300">pass rate</span>
+      </div>
+    </div>
+    <div class="text-sm space-y-2">
+      <div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-green-500 mr-2 block"></span> PASS: {{APP_PASS_COUNT}}</div>
+      <div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-red-500 mr-2 block"></span> FAIL: {{APP_FAIL_COUNT}}</div>
+    </div>
+  </div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: Run Tables -->
+<section class="space-y-6 pt-4">
+  <h2 class="text-lg font-bold text-gray-800">Filter Application Run Table</h2>
+  <div class="flex space-x-2">
+    <button class="filter-chip filter-all active" data-filter="all">All ({{APP_TOTAL_COUNT}})</button>
+    <button class="filter-chip filter-pass" data-filter="pass">PASS ({{APP_PASS_COUNT}})</button>
+    <button class="filter-chip filter-fail" data-filter="fail">FAIL ({{APP_FAIL_COUNT}})</button>
+  </div>
+  <p class="text-xs text-gray-500">Click a chip to filter the Application Run table below. Click any application row to expand its full scenario results.</p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+    <div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+      <span class="text-2xl font-bold text-gray-900">{{APP_TOTAL_COUNT}}</span>
+      <span class="text-xs text-gray-500 uppercase font-semibold mt-1">Applications Run</span>
+    </div>
+    <div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+      <span class="text-2xl font-bold text-gray-900">{{APP_PASS_COUNT}}</span>
+      <span class="text-xs text-gray-500 uppercase font-semibold mt-1">Applications Passed</span>
+    </div>
+    <div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+      <span class="text-2xl font-bold text-gray-900">{{APP_FAIL_COUNT}}</span>
+      <span class="text-xs text-gray-500 uppercase font-semibold mt-1">Applications Failed</span>
+    </div>
+  </div>
+  <div class="mt-6">
+    <h3 class="text-md font-bold text-gray-800 mb-2">Application Run</h3>
+    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white">
+      <table class="data-table" id="appTable">
+        <thead>
+          <tr>
+            <th class="w-12 text-center">#</th>
+            <th>APP ID</th>
+            <th>APPLICATION</th>
+            <th class="text-center">STATUS</th>
+            <th class="text-center">SCENARIOS PASSED</th>
+            <th class="text-center">SCENARIOS FAILED</th>
+            <th class="text-center">TOTAL SCENARIOS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{APP_ROWS}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<!-- END: Run Tables -->
+<footer class="text-center text-xs text-gray-400 py-8">
+  Generated automatically by ApplicationHealthCheckAfterPatch - {{TIMESTAMP}}
+</footer>
+</div>
+<script>
+  function toggleAppDetail(id, rowEl) {
+    var detail = document.getElementById(id);
+    if (!detail) return;
+    var willShow = detail.classList.contains('hidden');
+    detail.classList.toggle('hidden');
+    var chevron = rowEl.querySelector('.chevron');
+    if (chevron) chevron.classList.toggle('rotate-90', willShow);
+    rowEl.classList.toggle('bg-blue-50', willShow);
+  }
+  (function () {
+    var chips = document.querySelectorAll('.filter-chip');
+    var rows = document.querySelectorAll('#appTable tbody tr[data-row-type="app"]');
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        chips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        var filter = chip.getAttribute('data-filter');
+        rows.forEach(function (row) {
+          var status = row.getAttribute('data-status');
+          var show = (filter === 'all' || status === filter);
+          row.style.display = show ? '' : 'none';
+          var detailId = row.getAttribute('data-detail-target');
+          var detail = detailId ? document.getElementById(detailId) : null;
+          if (detail) {
+            detail.classList.add('hidden');
+            detail.style.display = show ? '' : 'none';
+            var chevron = row.querySelector('.chevron');
+            if (chevron) chevron.classList.remove('rotate-90');
+          }
+        });
+      });
+    });
+  })();
+</script>
 </body>
 </html>

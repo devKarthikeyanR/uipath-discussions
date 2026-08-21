@@ -1,27 +1,184 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Health Check - {{APP_NAME}}</title>
-<style>
-  body { font-family: Segoe UI, Arial, sans-serif; color: #222; }
-  h1 { font-size: 18px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 12px; }
-  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; font-size: 13px; }
-  th { background-color: #eeeeee; }
-  .pass { color: #1a7a1a; font-weight: bold; }
-  .fail { color: #b00020; font-weight: bold; }
-  .summary-pass { background-color: #e6f4e6; }
-  .summary-fail { background-color: #fbe6e6; }
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>Application Health Check - {{APP_NAME}}</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style data-purpose="custom-colors">
+  :root {
+    --vanguard-navy: #001f4b;
+    --vanguard-bg: #f3f4f6;
+    --vanguard-border: #d1d5db;
+    --status-pass: #22c55e;
+    --status-fail: #ef4444;
+    --status-skip: #f59e0b;
+    --status-skip-dark: #4b5563;
+  }
+  body {
+    background-color: var(--vanguard-bg);
+    font-family: 'Work Sans', sans-serif;
+  }
+</style>
+<style data-purpose="components" type="text/tailwindcss">
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all duration-200;
+  }
+  .card:hover {
+    @apply shadow-md -translate-y-0.5 border-gray-300;
+  }
+  .data-table {
+    @apply w-full text-sm text-left border-collapse;
+  }
+  .data-table th {
+    @apply bg-[#001f4b] text-white py-3 px-4 font-bold text-xs uppercase tracking-wider border-0;
+  }
+  .data-table td {
+    @apply py-3 px-4 border-b border-gray-200 bg-white;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .pill {
+    @apply inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide min-w-[70px] transition-transform duration-150;
+  }
+  .pill-pass {
+    @apply bg-green-100 text-green-700 border border-green-200;
+  }
+  .pill-fail {
+    @apply bg-[#ef4444] text-white;
+  }
+  .pill-skip {
+    @apply bg-[#fef3c7] text-[#d97706] border border-[#fde68a];
+  }
+  tr:hover .pill {
+    @apply scale-105;
+  }
+  .filter-chip {
+    @apply inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer transition-all duration-150 border;
+  }
+  .filter-chip:hover {
+    @apply shadow-sm -translate-y-px;
+  }
+  .filter-all.active {
+    @apply bg-[#001f4b] text-white border-[#001f4b];
+  }
+  .filter-pass {
+    @apply bg-[#f0fdf4] text-[#166534] border-[#bcf0da];
+  }
+  .filter-pass.active {
+    @apply bg-[#22c55e] text-white;
+  }
+  .filter-fail {
+    @apply bg-[#fef2f2] text-[#991b1b] border-[#fecaca];
+  }
+  .filter-fail.active {
+    @apply bg-[#ef4444] text-white;
+  }
 </style>
 </head>
-<body>
-  <h1>Application Health Check — {{APP_NAME}} ({{APP_ID}})</h1>
-  <p>Run ID: {{RUN_ID}} &nbsp;|&nbsp; Generated: {{TIMESTAMP}}</p>
-  <p class="{{APP_STATUS_CLASS}}">Overall status: {{APP_STATUS}}</p>
-  <table>
-    <tr><th>Scenario ID</th><th>Scenario Name</th><th>Operation</th><th>Status</th><th>Details</th></tr>
-    {{SCENARIO_ROWS}}
-  </table>
+<body class="px-6 py-6">
+<div class="mx-auto space-y-8 w-full">
+<!-- BEGIN: MainHeader -->
+<header class="text-white rounded-xl p-6 shadow-md flex justify-between items-center bg-[#001f4b]">
+  <div class="space-y-4">
+    <h1 class="text-2xl font-bold">Application Health Check - {{APP_NAME}} ({{APP_ID}})</h1>
+    <div class="text-sm text-gray-200 space-y-1">
+      <p>Run ID: <span class="font-medium">{{RUN_ID}}</span></p>
+      <p>Generated: <span class="font-medium">{{TIMESTAMP}}</span></p>
+    </div>
+    <div class="inline-block bg-white rounded-full px-4 py-1 text-sm font-bold tracking-wide mt-2 {{APP_STATUS_TEXT_CLASS}}">
+      OVERALL RESULT: {{APP_STATUS}}
+    </div>
+  </div>
+  <div class="flex items-center space-x-8">
+    <div class="relative w-24 h-24 flex items-center justify-center">
+      <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+        <circle class="text-gray-300" cx="18" cy="18" fill="none" r="15.9155" stroke="currentColor" stroke-width="3.5"></circle>
+        <circle class="{{DONUT_COLOR_CLASS}}" cx="18" cy="18" fill="none" r="15.9155" stroke="currentColor" stroke-dasharray="{{DONUT_DASHARRAY}}" stroke-linecap="round" stroke-width="3.5"></circle>
+      </svg>
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <span class="text-xl font-bold text-white">{{PASS_RATE}}%</span>
+        <span class="text-[10px] text-gray-300">pass rate</span>
+      </div>
+    </div>
+    <div class="text-sm space-y-2">
+      <div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-green-500 mr-2 block"></span> PASS: {{PASS_COUNT}}</div>
+      <div class="flex items-center"><span class="w-3 h-3 rounded-sm bg-red-500 mr-2 block"></span> FAIL: {{FAIL_COUNT}}</div>
+    </div>
+  </div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: Scenario Metrics -->
+<section class="space-y-6 pt-4">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+      <span class="text-2xl font-bold text-gray-900">{{TOTAL_COUNT}}</span>
+      <span class="text-xs text-gray-500 uppercase font-semibold mt-1">Total Scenarios</span>
+    </div>
+    <div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+      <span class="text-2xl font-bold text-gray-900">{{PASS_COUNT}}</span>
+      <span class="text-xs text-gray-500 uppercase font-semibold mt-1">Passed</span>
+    </div>
+    <div class="card flex flex-col justify-center h-24 border border-gray-300 shadow-none bg-gray-50 rounded-lg">
+      <span class="text-2xl font-bold text-gray-900">{{FAIL_COUNT}}</span>
+      <span class="text-xs text-gray-500 uppercase font-semibold mt-1">Failed</span>
+    </div>
+  </div>
+</section>
+<!-- END: Scenario Metrics -->
+<!-- BEGIN: Application Test Flow -->
+<section class="space-y-8 pt-4 border-t border-gray-300 mt-2">
+  <div>
+    <div class="flex justify-between items-end mb-2">
+      <h3 class="text-md font-bold text-gray-800">Application Test Flow - {{APP_NAME}}</h3>
+      <div class="flex space-x-1 scale-90 origin-bottom-right">
+        <button class="filter-chip filter-all active py-1 px-3" data-filter="all">All ({{TOTAL_COUNT}})</button>
+        <button class="filter-chip filter-pass py-1 px-3" data-filter="pass">PASS ({{PASS_COUNT}})</button>
+        <button class="filter-chip filter-fail py-1 px-3" data-filter="fail">FAIL ({{FAIL_COUNT}})</button>
+      </div>
+    </div>
+    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white">
+      <table class="data-table" id="scenarioTable">
+        <thead>
+          <tr>
+            <th class="w-12 text-center">#</th>
+            <th>SCENARIO ID</th>
+            <th>SCENARIO NAME</th>
+            <th>OPERATION</th>
+            <th>STATUS</th>
+            <th>DETAILS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{SCENARIO_ROWS}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<!-- END: Application Test Flow -->
+<footer class="text-center text-xs text-gray-400 py-8">
+  Generated automatically by ApplicationHealthCheckAfterPatch - {{TIMESTAMP}}
+</footer>
+</div>
+<script>
+  (function () {
+    var chips = document.querySelectorAll('#scenarioTable').length ? document.querySelectorAll('.filter-chip') : [];
+    var rows = document.querySelectorAll('#scenarioTable tbody tr');
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        chips.forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        var filter = chip.getAttribute('data-filter');
+        rows.forEach(function (row) {
+          var status = row.getAttribute('data-status');
+          row.style.display = (filter === 'all' || status === filter) ? '' : 'none';
+        });
+      });
+    });
+  })();
+</script>
 </body>
 </html>

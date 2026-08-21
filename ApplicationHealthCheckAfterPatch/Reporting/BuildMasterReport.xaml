@@ -2,6 +2,7 @@
   <x:Members>
     <x:Property sap2010:Annotation.AnnotationText="RunID for this health check run." Name="in_RunID" Type="InArgument(x:String)" />
     <x:Property sap2010:Annotation.AnnotationText="One row per app: columns AppID, AppName, Status, PassCount, FailCount, ScenarioCount." Name="in_AppResults" Type="InArgument(sd:DataTable)" />
+    <x:Property sap2010:Annotation.AnnotationText="Every scenario across every app: columns AppID, AppName, ScenarioID, ScenarioName, Operation, Status, Details. May be null if no scenarios were recorded." Name="in_ScenarioResultsByApp" Type="InArgument(sd:DataTable)" />
     <x:Property sap2010:Annotation.AnnotationText="Path to Templates\MasterReportTemplate.html." Name="in_TemplatePath" Type="InArgument(x:String)" />
     <x:Property sap2010:Annotation.AnnotationText="The rendered master HTML report body." Name="out_HtmlBody" Type="OutArgument(x:String)" />
   </x:Members>
@@ -41,14 +42,32 @@
   <Sequence DisplayName="Build Master HTML Report" sap2010:WorkflowViewState.IdRef="Sequence_2">
     <Sequence.Variables>
       <Variable x:TypeArguments="x:String" Name="TemplateText" />
-      <Variable x:TypeArguments="x:String" Default="&quot;&quot;" Name="RowsHtml" />
+      <Variable x:TypeArguments="x:String" Name="RowsHtml" />
       <Variable x:TypeArguments="x:String" Name="RowHtml" />
+      <Variable x:TypeArguments="x:String" Name="DetailRowsHtml" />
+      <Variable x:TypeArguments="x:String" Name="DetailRowHtml" />
+      <Variable x:TypeArguments="x:Int32" Name="AppPassCount" Default="0" />
+      <Variable x:TypeArguments="x:Int32" Name="AppFailCount" Default="0" />
+      <Variable x:TypeArguments="x:Int32" Name="AppTotalCount" Default="0" />
+      <Variable x:TypeArguments="x:Int32" Name="AppPassRate" Default="0" />
     </Sequence.Variables>
     <sap:WorkflowViewStateService.ViewState>
       <scg:Dictionary x:TypeArguments="x:String, x:Object">
         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
       </scg:Dictionary>
     </sap:WorkflowViewStateService.ViewState>
+    <Assign DisplayName="Initialize RowsHtml">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">
+          <CSharpReference x:TypeArguments="x:String">RowsHtml</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">
+          <CSharpValue x:TypeArguments="x:String">""</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
     <ui:ReadTextFile File="{x:Null}" DisplayName="Read Text File (master report template)" sap2010:WorkflowViewState.IdRef="ReadTextFile_1">
       <ui:ReadTextFile.Content>
         <OutArgument x:TypeArguments="x:String">
@@ -68,6 +87,103 @@
             <DelegateInArgument x:TypeArguments="sd:DataRow" Name="Row" />
           </ActivityAction.Argument>
           <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_1">
+            <Assign DisplayName="Assign AppTotalCount" sap2010:WorkflowViewState.IdRef="Assign_4">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:Int32">
+                  <CSharpReference x:TypeArguments="x:Int32">AppTotalCount</CSharpReference>
+                </OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:Int32">
+                  <CSharpValue x:TypeArguments="x:Int32">AppTotalCount + 1</CSharpValue>
+                </InArgument>
+              </Assign.Value>
+            </Assign>
+            <If DisplayName="If app passed" sap2010:WorkflowViewState.IdRef="If_1">
+              <If.Condition>
+                <InArgument x:TypeArguments="x:Boolean">
+                  <CSharpValue x:TypeArguments="x:Boolean">Row["Status"].ToString() == "PASS"</CSharpValue>
+                </InArgument>
+              </If.Condition>
+              <If.Then>
+                <Assign DisplayName="Assign AppPassCount">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:Int32">
+                      <CSharpReference x:TypeArguments="x:Int32">AppPassCount</CSharpReference>
+                    </OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:Int32">
+                      <CSharpValue x:TypeArguments="x:Int32">AppPassCount + 1</CSharpValue>
+                    </InArgument>
+                  </Assign.Value>
+                </Assign>
+              </If.Then>
+              <If.Else>
+                <Assign DisplayName="Assign AppFailCount">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:Int32">
+                      <CSharpReference x:TypeArguments="x:Int32">AppFailCount</CSharpReference>
+                    </OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:Int32">
+                      <CSharpValue x:TypeArguments="x:Int32">AppFailCount + 1</CSharpValue>
+                    </InArgument>
+                  </Assign.Value>
+                </Assign>
+              </If.Else>
+            </If>
+            <Assign DisplayName="Initialize DetailRowsHtml">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:String">
+                  <CSharpReference x:TypeArguments="x:String">DetailRowsHtml</CSharpReference>
+                </OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:String">
+                  <CSharpValue x:TypeArguments="x:String">""</CSharpValue>
+                </InArgument>
+              </Assign.Value>
+            </Assign>
+            <ForEach x:TypeArguments="sd:DataRow" DisplayName="For each scenario of this app">
+              <ForEach.Values>
+                <InArgument x:TypeArguments="scg:IEnumerable(sd:DataRow)">
+                  <CSharpValue x:TypeArguments="scg:IEnumerable(sd:DataRow)">in_ScenarioResultsByApp == null ? Enumerable.Empty&lt;DataRow&gt;() : in_ScenarioResultsByApp.AsEnumerable().Where(r =&gt; r.Field&lt;string&gt;("AppID") == Row["AppID"].ToString())</CSharpValue>
+                </InArgument>
+              </ForEach.Values>
+              <ActivityAction x:TypeArguments="sd:DataRow">
+                <ActivityAction.Argument>
+                  <DelegateInArgument x:TypeArguments="sd:DataRow" Name="ScenarioRow" />
+                </ActivityAction.Argument>
+                <Sequence DisplayName="Body">
+                  <Assign DisplayName="Assign DetailRowHtml">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="x:String">
+                        <CSharpReference x:TypeArguments="x:String">DetailRowHtml</CSharpReference>
+                      </OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="x:String">
+                        <CSharpValue x:TypeArguments="x:String">"&lt;tr class=\"hover:bg-gray-50 transition-colors\"&gt;&lt;td class=\"py-2 px-4\"&gt;" + ScenarioRow["ScenarioID"].ToString() + "&lt;/td&gt;&lt;td class=\"py-2 px-4\"&gt;" + ScenarioRow["ScenarioName"].ToString() + "&lt;/td&gt;&lt;td class=\"py-2 px-4\"&gt;" + ScenarioRow["Operation"].ToString() + "&lt;/td&gt;&lt;td class=\"py-2 px-4\"&gt;&lt;span class=\"pill " + (ScenarioRow["Status"].ToString() == "Pass" ? "pill-pass" : "pill-fail") + "\"&gt;" + ScenarioRow["Status"].ToString().ToUpper() + "&lt;/span&gt;&lt;/td&gt;&lt;td class=\"py-2 px-4\"&gt;" + ScenarioRow["Details"].ToString() + "&lt;/td&gt;&lt;/tr&gt;"</CSharpValue>
+                      </InArgument>
+                    </Assign.Value>
+                  </Assign>
+                  <Assign DisplayName="Append DetailRowHtml to DetailRowsHtml">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="x:String">
+                        <CSharpReference x:TypeArguments="x:String">DetailRowsHtml</CSharpReference>
+                      </OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="x:String">
+                        <CSharpValue x:TypeArguments="x:String">DetailRowsHtml + DetailRowHtml</CSharpValue>
+                      </InArgument>
+                    </Assign.Value>
+                  </Assign>
+                </Sequence>
+              </ActivityAction>
+            </ForEach>
             <Assign DisplayName="Assign RowHtml" sap2010:WorkflowViewState.IdRef="Assign_1">
               <Assign.To>
                 <OutArgument x:TypeArguments="x:String">
@@ -76,7 +192,7 @@
               </Assign.To>
               <Assign.Value>
                 <InArgument x:TypeArguments="x:String">
-                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_3">"&lt;tr&gt;&lt;td&gt;" + Row["AppID"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["AppName"].ToString() + "&lt;/td&gt;&lt;td class=\"" + (Row["Status"].ToString() == "PASS" ? "pass" : "fail") + "\"&gt;" + Row["Status"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["PassCount"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["FailCount"].ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["ScenarioCount"].ToString() + "&lt;/td&gt;&lt;/tr&gt;"</CSharpValue>
+                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_3">"&lt;tr data-status=\"" + (Row["Status"].ToString() == "PASS" ? "pass" : "fail") + "\" data-row-type=\"app\" data-detail-target=\"app-detail-" + AppTotalCount.ToString() + "\" class=\"cursor-pointer hover:bg-blue-50 transition-colors\" onclick=\"toggleAppDetail('app-detail-" + AppTotalCount.ToString() + "', this)\"&gt;&lt;td class=\"text-center text-gray-500 w-12\"&gt;" + (AppTotalCount).ToString() + "&lt;/td&gt;&lt;td&gt;" + Row["AppID"].ToString() + "&lt;/td&gt;&lt;td class=\"text-blue-600 font-medium\"&gt;&lt;span class=\"chevron inline-block transition-transform duration-200 mr-1\"&gt;&amp;#9656;&lt;/span&gt;" + Row["AppName"].ToString() + "&lt;/td&gt;&lt;td class=\"text-center\"&gt;&lt;span class=\"pill " + (Row["Status"].ToString() == "PASS" ? "pill-pass" : "pill-fail") + "\"&gt;" + Row["Status"].ToString() + "&lt;/span&gt;&lt;/td&gt;&lt;td class=\"text-center\"&gt;" + Row["PassCount"].ToString() + "&lt;/td&gt;&lt;td class=\"text-center\"&gt;" + Row["FailCount"].ToString() + "&lt;/td&gt;&lt;td class=\"text-center\"&gt;" + Row["ScenarioCount"].ToString() + "&lt;/td&gt;&lt;/tr&gt;" + "&lt;tr id=\"app-detail-" + AppTotalCount.ToString() + "\" class=\"hidden\" data-row-type=\"detail\"&gt;&lt;td colspan=\"7\" class=\"bg-gray-50 p-4\"&gt;&lt;div class=\"border border-gray-200 rounded-lg overflow-hidden bg-white\"&gt;&lt;table class=\"data-table\"&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;SCENARIO ID&lt;/th&gt;&lt;th&gt;SCENARIO NAME&lt;/th&gt;&lt;th&gt;OPERATION&lt;/th&gt;&lt;th&gt;STATUS&lt;/th&gt;&lt;th&gt;DETAILS&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;" + (string.IsNullOrEmpty(DetailRowsHtml) ? "&lt;tr&gt;&lt;td colspan=\"5\" class=\"text-center text-gray-500 py-3 px-4\"&gt;No scenario data recorded for this application.&lt;/td&gt;&lt;/tr&gt;" : DetailRowsHtml) + "&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;"</CSharpValue>
                 </InArgument>
               </Assign.Value>
             </Assign>
@@ -101,6 +217,18 @@
         </InArgument>
       </ui:ForEachRow.DataTable>
     </ui:ForEachRow>
+    <Assign DisplayName="Assign AppPassRate">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">
+          <CSharpReference x:TypeArguments="x:Int32">AppPassRate</CSharpReference>
+        </OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">
+          <CSharpValue x:TypeArguments="x:Int32">AppTotalCount == 0 ? 0 : (int)Math.Round(100.0 * AppPassCount / AppTotalCount)</CSharpValue>
+        </InArgument>
+      </Assign.Value>
+    </Assign>
     <Assign DisplayName="Assign out_HtmlBody (template substitution)" sap2010:WorkflowViewState.IdRef="Assign_3">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">
@@ -109,7 +237,7 @@
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:String">
-          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_5">TemplateText.Replace("{{RUN_ID}}", in_RunID).Replace("{{TIMESTAMP}}", DateTime.Now.ToString()).Replace("{{APP_ROWS}}", RowsHtml)</CSharpValue>
+          <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_5">TemplateText.Replace("{{RUN_ID}}", in_RunID).Replace("{{TIMESTAMP}}", DateTime.Now.ToString()).Replace("{{OVERALL_STATUS}}", AppFailCount == 0 ? "PASS" : "FAIL").Replace("{{OVERALL_STATUS_TEXT_CLASS}}", AppFailCount == 0 ? "text-green-700" : "text-red-700").Replace("{{DONUT_COLOR_CLASS}}", "text-green-500").Replace("{{DONUT_DASHARRAY}}", AppPassRate.ToString() + " " + (100 - AppPassRate).ToString()).Replace("{{APP_PASS_RATE}}", AppPassRate.ToString()).Replace("{{APP_PASS_COUNT}}", AppPassCount.ToString()).Replace("{{APP_FAIL_COUNT}}", AppFailCount.ToString()).Replace("{{APP_TOTAL_COUNT}}", AppTotalCount.ToString()).Replace("{{APP_ROWS}}", RowsHtml)</CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>

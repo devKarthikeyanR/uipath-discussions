@@ -1,4 +1,4 @@
-<Activity mc:Ignorable="sap sap2010" x:Class="Applications_Outlook_Outlook_AddAttachment" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Drawing;assembly=System.Drawing.Common" xmlns:sd1="clr-namespace:System.Drawing;assembly=System.Drawing.Primitives" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uix="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Activity mc:Ignorable="sap sap2010" x:Class="Applications_Outlook_Outlook_AddAttachment" this:Applications_Outlook_Outlook_AddAttachment.in_TimeoutSec="0" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Drawing;assembly=System.Drawing.Common" xmlns:sd1="clr-namespace:System.Drawing;assembly=System.Drawing.Primitives" xmlns:this="clr-namespace:" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:uix="http://schemas.uipath.com/workflow/activities/uix" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Members>
     <x:Property sap2010:Annotation.AnnotationText="Recipient email address for the To field." Name="in_TargetRecipient" Type="InArgument(x:String)" />
     <x:Property sap2010:Annotation.AnnotationText="Email subject line. Should already contain the correlation token." Name="in_Subject" Type="InArgument(x:String)" />
@@ -18,6 +18,18 @@
       <x:String>System.Linq</x:String>
       <x:String>UiPath.Core</x:String>
       <x:String>UiPath.Core.Activities</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>UiPath.UIAutomationNext.Enums</x:String>
+      <x:String>UiPath.UIAutomationNext.Contracts</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Runtime.Serialization</x:String>
+      <x:String>System.Drawing</x:String>
+      <x:String>UiPath.UIAutomationNext.Models.CV</x:String>
+      <x:String>UiPath.UIAutomationCore.Contracts</x:String>
+      <x:String>UiPath.UIAutomationNext.Activities</x:String>
+      <x:String>UiPath.Shared.Activities</x:String>
+      <x:String>UiPath.Platform.ObjectLibrary</x:String>
+      <x:String>UiPath.Platform.SyncObjects</x:String>
     </sco:Collection>
   </TextExpression.NamespacesForImplementation>
   <TextExpression.ReferencesForImplementation>
@@ -35,61 +47,136 @@
       <AssemblyReference>System.Linq</AssemblyReference>
       <AssemblyReference>System.ObjectModel</AssemblyReference>
       <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationNext</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.Collections.NonGeneric</AssemblyReference>
+      <AssemblyReference>System.Private.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.Private.DataContractSerialization</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Formatters</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Primitives</AssemblyReference>
+      <AssemblyReference>System.Drawing.Primitives</AssemblyReference>
+      <AssemblyReference>System.Drawing.Common</AssemblyReference>
+      <AssemblyReference>UiPath.UIAutomationCore</AssemblyReference>
+      <AssemblyReference>UiPath.Testing.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.OCR.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Platform</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <Sequence sap2010:Annotation.AnnotationText="Composes and sends an email with a file attachment via Outlook Classic. All Click/Type Into targets are placeholders — a developer must run Indicate against a real Outlook Classic instance on each TODO-marked activity, including the native Windows Insert File dialog." DisplayName="Outlook Send Email With Attachment" sap2010:WorkflowViewState.IdRef="Sequence_2">
+  <Sequence sap2010:Annotation.AnnotationText="Composes and sends an email with a file attachment via Outlook Classic. All Click/Type Into targets are placeholders — a developer must run Indicate against a real Outlook Classic instance on each TODO-marked activity, including the native Windows Insert File dialog." DisplayName="Outlook Send Email With Attachment" sap:VirtualizedContainerService.HintSize="790.8000000000001,2447.2" sap2010:WorkflowViewState.IdRef="Sequence_2">
     <sap:WorkflowViewStateService.ViewState>
       <scg:Dictionary x:TypeArguments="x:String, x:Object">
         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
       </scg:Dictionary>
     </sap:WorkflowViewStateService.ViewState>
-    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (attach Outlook Classic)" HealingAgentBehavior="Job" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="c1a1e001-0001-4a11-8a11-0000000000c1" Version="V2">
+    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (attach Outlook Classic)" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="456.8,2424" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="c1a1e001-0001-4a11-8a11-0000000000c1" Version="V2">
       <uix:NApplicationCard.Body>
         <ActivityAction x:TypeArguments="x:Object">
           <ActivityAction.Argument>
             <DelegateInArgument x:TypeArguments="x:Object" Name="WSSessionData" />
           </ActivityAction.Argument>
-          <Sequence DisplayName="Do" sap2010:WorkflowViewState.IdRef="Sequence_1">
-            <ui:LogMessage DisplayName="Log Message (composing email with attachment)" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info">
+          <Sequence DisplayName="Do" sap:VirtualizedContainerService.HintSize="455.2,2177.6" sap2010:WorkflowViewState.IdRef="Sequence_1">
+            <sap:WorkflowViewStateService.ViewState>
+              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+              </scg:Dictionary>
+            </sap:WorkflowViewStateService.ViewState>
+            <ui:LogMessage DisplayName="Log Message (composing email with attachment)" sap:VirtualizedContainerService.HintSize="421.6,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info">
               <ui:LogMessage.Message>
                 <InArgument x:TypeArguments="x:Object">
                   <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_1">"Composing email with attachment " + in_AttachmentPath + " to " + in_TargetRecipient</CSharpValue>
                 </InArgument>
               </ui:LogMessage.Message>
             </ui:LogMessage>
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click New Email button" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NClick_1" KeyModifiers="None" MouseButton="Left" Version="V5" />
-            <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="TODO Indicate — Type To recipient" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_1" Version="V5">
-              <uix:NTypeInto.Text>
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click New Email button" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="421.6,193.6" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="c1a1e001-0001-4a11-8a11-0000000000c1" Version="V5">
+              <uix:NClick.Target>
+                <uix:TargetAnchorable DesignTimeRectangle="84, 120, 50, 46" ElementType="Button" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Ribbon' role='pane' /&gt;&lt;ctrl name='Home' role='property page' /&gt;&lt;ctrl name='New' role='grouping' /&gt;&lt;ctrl name='New' role='push button' /&gt;" Guid="5de8f382-a00e-46e5-9517-1968bbe76e53" InformativeScreenshot="802fc3c0dd391bb260fbbceecea0c063.jpg" ScopeSelectorArgument="&lt;wnd app='olk.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+              </uix:NClick.Target>
+            </uix:NClick>
+            <ui:SetValue AlterIfDisabled="{x:Null}" ContinueOnError="{x:Null}" DelayAfter="{x:Null}" DelayBefore="{x:Null}" DisplayName="Set Text - Type To recipient" sap:VirtualizedContainerService.HintSize="416,188" sap2010:WorkflowViewState.IdRef="SetValue_1">
+              <ui:SetValue.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Id="d585fe11-e3d4-4031-bdf6-9fd538f4275c" InformativeScreenshot="ba9e36d3bfb8193db1321e80bcc8382f" Selector="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Reading Pane' role='grouping' /&gt;&lt;ctrl name='To' role='grouping' /&gt;">
+                  <ui:Target.TimeoutMS>
+                    <InArgument x:TypeArguments="x:Int32" />
+                  </ui:Target.TimeoutMS>
+                  <ui:Target.WaitForReady>
+                    <InArgument x:TypeArguments="ui:WaitForReady" />
+                  </ui:Target.WaitForReady>
+                </ui:Target>
+              </ui:SetValue.Target>
+              <ui:SetValue.Text>
                 <InArgument x:TypeArguments="x:String">
-                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_2">in_TargetRecipient</CSharpValue>
+                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_8">in_TargetRecipient</CSharpValue>
                 </InArgument>
-              </uix:NTypeInto.Text>
-            </uix:NTypeInto>
-            <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="TODO Indicate — Type Subject" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_2" Version="V5">
-              <uix:NTypeInto.Text>
+              </ui:SetValue.Text>
+            </ui:SetValue>
+            <ui:SetValue AlterIfDisabled="{x:Null}" ContinueOnError="{x:Null}" DelayAfter="{x:Null}" DelayBefore="{x:Null}" DisplayName="Set Text - Type Subject" sap:VirtualizedContainerService.HintSize="416,188" sap2010:WorkflowViewState.IdRef="SetValue_2">
+              <ui:SetValue.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Id="56519178-f7ff-4e2a-912b-b06bafe49789" InformativeScreenshot="0ba2d1148a8e45f43eb146bbde90e37a" Selector="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Reading Pane' role='grouping' /&gt;&lt;ctrl name='Subject' role='editable text' /&gt;">
+                  <ui:Target.TimeoutMS>
+                    <InArgument x:TypeArguments="x:Int32" />
+                  </ui:Target.TimeoutMS>
+                  <ui:Target.WaitForReady>
+                    <InArgument x:TypeArguments="ui:WaitForReady" />
+                  </ui:Target.WaitForReady>
+                </ui:Target>
+              </ui:SetValue.Target>
+              <ui:SetValue.Text>
                 <InArgument x:TypeArguments="x:String">
-                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_3">in_Subject</CSharpValue>
+                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_9">in_Subject</CSharpValue>
                 </InArgument>
-              </uix:NTypeInto.Text>
-            </uix:NTypeInto>
-            <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="TODO Indicate — Type Body" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_3" Version="V5">
-              <uix:NTypeInto.Text>
+              </ui:SetValue.Text>
+            </ui:SetValue>
+            <ui:SetValue AlterIfDisabled="{x:Null}" ContinueOnError="{x:Null}" DelayAfter="{x:Null}" DelayBefore="{x:Null}" DisplayName="Set Text - Type Subject" sap:VirtualizedContainerService.HintSize="416,188" sap2010:WorkflowViewState.IdRef="SetValue_3">
+              <ui:SetValue.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Id="56519178-f7ff-4e2a-912b-b06bafe49789" InformativeScreenshot="c44a71811fb3cc0de0c87e99cc86fe39" Selector="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Reading Pane' role='grouping' /&gt;&lt;ctrl name='Message body' role='editable text' /&gt;">
+                  <ui:Target.TimeoutMS>
+                    <InArgument x:TypeArguments="x:Int32" />
+                  </ui:Target.TimeoutMS>
+                  <ui:Target.WaitForReady>
+                    <InArgument x:TypeArguments="ui:WaitForReady" />
+                  </ui:Target.WaitForReady>
+                </ui:Target>
+              </ui:SetValue.Target>
+              <ui:SetValue.Text>
                 <InArgument x:TypeArguments="x:String">
-                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_4">in_Body</CSharpValue>
+                  <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_10">in_Body</CSharpValue>
                 </InArgument>
-              </uix:NTypeInto.Text>
-            </uix:NTypeInto>
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Attach File / Insert File button" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NClick_2" KeyModifiers="None" MouseButton="Left" Version="V5" />
-            <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="TODO Indicate — Type attachment path in the Insert File dialog file-name box" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NTypeInto_4" Version="V5">
+              </ui:SetValue.Text>
+            </ui:SetValue>
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Attach File / Insert File button" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="421.6,193.6" sap2010:WorkflowViewState.IdRef="NClick_2" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="c1a1e001-0001-4a11-8a11-0000000000c1" Version="V5">
+              <uix:NClick.Target>
+                <uix:TargetAnchorable DesignTimeRectangle="799, 118, 120, 30" ElementType="Button" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Ribbon' role='pane' /&gt;&lt;ctrl name='Message' role='property page' /&gt;&lt;ctrl name='Insert' role='grouping' /&gt;&lt;ctrl name='Attach file' role='menu button' /&gt;" Guid="770650d2-eca2-4607-a3c1-d16fd15fa060" InformativeScreenshot="b7d442893c318f8e49e19adaf8301d77.jpg" ScopeSelectorArgument="&lt;wnd app='olk.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+              </uix:NClick.Target>
+            </uix:NClick>
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Attach File / Insert File button" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="421.6,193.6" sap2010:WorkflowViewState.IdRef="NClick_5" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="c1a1e001-0001-4a11-8a11-0000000000c1" Version="V5">
+              <uix:NClick.Target>
+                <uix:TargetAnchorable DesignTimeRectangle="812, 155, 342, 38" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Attach file' role='popup menu' /&gt;&lt;ctrl name='Browse this computer' role='menu item' /&gt;&lt;ctrl role='grouping' /&gt;" Guid="5a6f2c86-5c53-4d55-a9d5-eea1eb761a46" InformativeScreenshot="4830e370c66919a75d896cd45fc6252a.jpg" ScopeSelectorArgument="&lt;wnd app='olk.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+              </uix:NClick.Target>
+            </uix:NClick>
+            <uix:NTypeInto ActivateBefore="True" ClickBeforeMode="Single" DisplayName="TODO Indicate — Type attachment path in the Insert File dialog file-name box" EmptyFieldMode="SingleLine" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="421.6,245.6" sap2010:WorkflowViewState.IdRef="NTypeInto_4" InteractionMode="SameAsCard" ScopeIdentifier="c1a1e001-0001-4a11-8a11-0000000000c1" Version="V5">
+              <uix:NTypeInto.Target>
+                <uix:TargetAnchorable DesignTimeRectangle="234, 505, 422, 20" ElementType="InputBox" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;wnd ctrlid='1148' /&gt;&lt;wnd ctrlid='1148' /&gt;&lt;wnd ctrlid='1148' /&gt;" Guid="cedbb4d7-8a06-4279-bb9d-251046ce1aa3" InformativeScreenshot="56589a5d213f8b50eedea2a72d8cb382.jpg" ScopeSelectorArgument="&lt;wnd app='msedgewebview2.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Open' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+              </uix:NTypeInto.Target>
               <uix:NTypeInto.Text>
                 <InArgument x:TypeArguments="x:String">
                   <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_5">in_AttachmentPath</CSharpValue>
                 </InArgument>
               </uix:NTypeInto.Text>
             </uix:NTypeInto>
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Insert/Open button in the Insert File dialog" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NClick_3" KeyModifiers="None" MouseButton="Left" Version="V5" />
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Send button" HealingAgentBehavior="SameAsCard" sap2010:WorkflowViewState.IdRef="NClick_4" KeyModifiers="None" MouseButton="Left" Version="V5" />
-            <ui:LogMessage DisplayName="Log Message (email with attachment sent)" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info">
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Insert/Open button in the Insert File dialog" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="421.6,193.6" sap2010:WorkflowViewState.IdRef="NClick_3" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="c1a1e001-0001-4a11-8a11-0000000000c1" Version="V5">
+              <uix:NClick.Target>
+                <uix:TargetAnchorable DesignTimeRectangle="695, 537, 110, 33" ElementType="Button" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;wnd ctrlid='1' title='&amp;amp;Open' /&gt;" Guid="752be296-5ea9-4b46-9d82-8f6ec5a7c671" InformativeScreenshot="d73da395141d467d0ee21c5212380d0f.jpg" ScopeSelectorArgument="&lt;wnd app='msedgewebview2.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Open' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+              </uix:NClick.Target>
+            </uix:NClick>
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Send button" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="421.6,193.6" sap2010:WorkflowViewState.IdRef="NClick_4" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="c1a1e001-0001-4a11-8a11-0000000000c1" Version="V5">
+              <uix:NClick.Target>
+                <uix:TargetAnchorable DesignTimeRectangle="925, 263, 105, 40" ElementType="Button" ElementVisibilityArgument="Interactive" FullSelectorArgument="&lt;wnd aaname='Mail - Karthikeyan Ramamoorthy - Outlook - Web content' cls='Chrome_WidgetWin_1' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;&lt;ctrl name='Mail - Karthikeyan Ramamoorthy - Outlook' role='document' /&gt;&lt;ctrl name='Reading Pane' role='grouping' /&gt;&lt;ctrl name='Send' role='push button' /&gt;" Guid="43babc46-56c1-48a3-8958-5451632d33cb" InformativeScreenshot="04dff783b1d69d26c99b224110cfcb0a.jpg" ScopeSelectorArgument="&lt;wnd app='olk.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;" SearchSteps="Selector" Version="V6" WaitForReadyArgument="Interactive" />
+              </uix:NClick.Target>
+            </uix:NClick>
+            <ui:LogMessage DisplayName="Log Message (email with attachment sent)" sap:VirtualizedContainerService.HintSize="421.6,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info">
               <ui:LogMessage.Message>
                 <InArgument x:TypeArguments="x:Object">
                   <CSharpValue x:TypeArguments="x:Object" sap2010:WorkflowViewState.IdRef="CSharpValue`1_6">"Send Email With Attachment scenario completed for subject: " + in_Subject</CSharpValue>
@@ -107,7 +194,11 @@
         </ActivityFunc>
       </uix:NApplicationCard.OCREngine>
       <uix:NApplicationCard.TargetApp>
-        <uix:TargetApp Area="0, 0, 0, 0" Version="V3" />
+        <uix:TargetApp Area="-9, -9, 1938, 1038" FilePath="Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows" IconBase64="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" InformativeScreenshot="8dceb2055d9685e481389c30b72009d0.jpg" Selector="&lt;wnd app='olk.exe' appid='Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows' title='Mail - Karthikeyan Ramamoorthy - Outlook' /&gt;" Version="V3">
+          <uix:TargetApp.Arguments>
+            <InArgument x:TypeArguments="x:String" />
+          </uix:TargetApp.Arguments>
+        </uix:TargetApp>
       </uix:NApplicationCard.TargetApp>
       <uix:NApplicationCard.Timeout>
         <InArgument x:TypeArguments="x:Double">
