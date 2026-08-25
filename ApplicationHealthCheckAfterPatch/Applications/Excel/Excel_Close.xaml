@@ -46,7 +46,12 @@
         </InArgument>
       </ui:LogMessage.Message>
     </ui:LogMessage>
-    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Always" DisplayName="TODO Indicate — Use Application/Browser (attach Excel to close)" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="456.8,472" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000a2" Version="V2">
+    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Always" DisplayName="TODO Indicate — Use Application/Browser (attach Excel to close)" HealingAgentBehavior="Job" sap2010:Annotation.AnnotationText="INTERN TASK: Click Indicate, then point this scope at the running Excel application window (same window you indicated in Excel_Launch.xaml — title bar/ribbon area is fine). This activity attaches to that window and closes it (CloseMode=Always) once the Do block below finishes." sap:VirtualizedContainerService.HintSize="456.8,472" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000a2" Version="V2">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
       <uix:NApplicationCard.Body>
         <ActivityAction x:TypeArguments="x:Object">
           <ActivityAction.Argument>

@@ -40,7 +40,12 @@
         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
       </scg:Dictionary>
     </sap:WorkflowViewStateService.ViewState>
-    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (attach Excel)" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="451.2,1376.8" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000e1" Version="V2">
+    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (attach Excel)" HealingAgentBehavior="Job" sap2010:Annotation.AnnotationText="INTERN TASK: Click Indicate, then point this scope at the already-running Excel application window with a workbook open (title bar/ribbon area is fine). Do not indicate the Save As dialog here — this is the scope every click/type step below runs inside, including the dialog that pops up over it." sap:VirtualizedContainerService.HintSize="451.2,1376.8" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000e1" Version="V2">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
       <uix:NApplicationCard.Body>
         <ActivityAction x:TypeArguments="x:Object">
           <ActivityAction.Argument>
@@ -59,16 +64,39 @@
                 </InArgument>
               </ui:LogMessage.Message>
             </ui:LogMessage>
-            <uix:NKeyboardShortcuts ActivateBefore="True" DisplayName="TODO Indicate — Send F12 (Save As dialog)" HealingAgentBehavior="SameAsCard" InteractionMode="HardwareEvents" Shortcuts="[d(hk)][k(f12)][u(hk)]" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NKeyboardShortcuts_1" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000e1" Version="V5" />
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Favorites/Quick Access shortcut (Save As dialog sidebar)" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000e1" Version="V5" />
-            <ui:SetValue AlterIfDisabled="{x:Null}" ContinueOnError="{x:Null}" DelayAfter="{x:Null}" DelayBefore="{x:Null}" DisplayName="TODO Indicate — Type file name (Save As dialog)" sap:VirtualizedContainerService.HintSize="416,188">
+            <uix:NKeyboardShortcuts ActivateBefore="True" DisplayName="TODO Indicate — Send F12 (Save As dialog)" HealingAgentBehavior="SameAsCard" InteractionMode="HardwareEvents" Shortcuts="[d(hk)][k(f12)][u(hk)]" sap2010:Annotation.AnnotationText="INTERN TASK: Sends F12 to open the Save As dialog on the active workbook. Does not need Indicate/a Target — just confirm Excel is the focused window when it runs." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NKeyboardShortcuts_1" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000e1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NKeyboardShortcuts>
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Favorites/Quick Access shortcut (Save As dialog sidebar)" HealingAgentBehavior="SameAsCard" sap2010:Annotation.AnnotationText="INTERN TASK: With the Save As dialog open (previous step), click Indicate, then click the 'Favorites' or 'Quick Access' shortcut in the dialog's left-hand navigation sidebar. This is the specific step this scenario exists to validate — make sure you indicate the sidebar shortcut itself, not a folder inside it." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000e1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NClick>
+            <ui:SetValue AlterIfDisabled="{x:Null}" ContinueOnError="{x:Null}" DelayAfter="{x:Null}" DelayBefore="{x:Null}" DisplayName="TODO Indicate — Type file name (Save As dialog)" sap2010:Annotation.AnnotationText="INTERN TASK: With the Favorites/Quick Access location selected (previous step), click Indicate, then point this at the file name text field in the Save As dialog. This activity types in_FileName into it." sap:VirtualizedContainerService.HintSize="416,188">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
               <ui:SetValue.Text>
                 <InArgument x:TypeArguments="x:String">
                   <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_2">in_FileName</CSharpValue>
                 </InArgument>
               </ui:SetValue.Text>
             </ui:SetValue>
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Save button (Save As dialog)" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_2" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000e1" Version="V5" />
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Save button (Save As dialog)" HealingAgentBehavior="SameAsCard" sap2010:Annotation.AnnotationText="INTERN TASK: Click Indicate, then click the 'Save' button in the Save As dialog to confirm and save the workbook into the Favorites/Quick Access location under in_FileName." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_2" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000e1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NClick>
             <ui:LogMessage DisplayName="Log Message (saved to favorite)" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info">
               <ui:LogMessage.Message>
                 <InArgument x:TypeArguments="x:Object">

@@ -40,7 +40,12 @@
         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
       </scg:Dictionary>
     </sap:WorkflowViewStateService.ViewState>
-    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (attach Excel)" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="451.2,1376.8" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V2">
+    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (attach Excel)" HealingAgentBehavior="Job" sap2010:Annotation.AnnotationText="INTERN TASK: Click Indicate, then point this scope at the already-running Excel application window (the main Excel window — title bar/ribbon area is fine). Do not indicate a specific cell or dialog here — this is the scope every click/type step below runs inside." sap:VirtualizedContainerService.HintSize="451.2,1376.8" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V2">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
       <uix:NApplicationCard.Body>
         <ActivityAction x:TypeArguments="x:Object">
           <ActivityAction.Argument>
@@ -59,18 +64,53 @@
                 </InArgument>
               </ui:LogMessage.Message>
             </ui:LogMessage>
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click File tab" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5" />
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click New" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_2" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5" />
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Blank workbook" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_3" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5" />
-            <uix:NKeyboardShortcuts ActivateBefore="True" DisplayName="TODO Indicate — Send Ctrl+S (Save)" HealingAgentBehavior="SameAsCard" InteractionMode="HardwareEvents" Shortcuts="[d(hk)][d(ctrl)]s[u(ctrl)][u(hk)]" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NKeyboardShortcuts_1" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5" />
-            <ui:SetValue AlterIfDisabled="{x:Null}" ContinueOnError="{x:Null}" DelayAfter="{x:Null}" DelayBefore="{x:Null}" DisplayName="TODO Indicate — Type file name (Save As dialog)" sap:VirtualizedContainerService.HintSize="416,188">
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click File tab" HealingAgentBehavior="SameAsCard" sap2010:Annotation.AnnotationText="INTERN TASK: Click Indicate, then click the 'File' tab in the Excel ribbon (top-left corner — opens the Backstage view). This is the first step toward creating a new blank workbook." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NClick>
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click New" HealingAgentBehavior="SameAsCard" sap2010:Annotation.AnnotationText="INTERN TASK: With the File Backstage view open (previous step), click Indicate, then click the 'New' item in the left-hand navigation menu." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_2" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NClick>
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Blank workbook" HealingAgentBehavior="SameAsCard" sap2010:Annotation.AnnotationText="INTERN TASK: On the New screen (previous step), click Indicate, then click the 'Blank workbook' tile to create a new empty workbook." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_3" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NClick>
+            <uix:NKeyboardShortcuts ActivateBefore="True" DisplayName="TODO Indicate — Send Ctrl+S (Save)" HealingAgentBehavior="SameAsCard" InteractionMode="HardwareEvents" Shortcuts="[d(hk)][d(ctrl)]s[u(ctrl)][u(hk)]" sap2010:Annotation.AnnotationText="INTERN TASK: Sends Ctrl+S to the new blank workbook (previous step) to trigger Save, which opens the Save As dialog since the workbook has never been saved. This activity does not need Indicate/a Target — just confirm the new workbook is the focused window when it runs." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NKeyboardShortcuts_1" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NKeyboardShortcuts>
+            <ui:SetValue AlterIfDisabled="{x:Null}" ContinueOnError="{x:Null}" DelayAfter="{x:Null}" DelayBefore="{x:Null}" DisplayName="TODO Indicate — Type file name (Save As dialog)" sap2010:Annotation.AnnotationText="INTERN TASK: The Save As dialog should now be open (previous step). Click Indicate, then point this at the file name text field in the Save As dialog. This activity types in_FileName into that field." sap:VirtualizedContainerService.HintSize="416,188">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
               <ui:SetValue.Text>
                 <InArgument x:TypeArguments="x:String">
                   <CSharpValue x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="CSharpValue`1_2">in_FileName</CSharpValue>
                 </InArgument>
               </ui:SetValue.Text>
             </ui:SetValue>
-            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Save button (Save As dialog)" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_4" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5" />
+            <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click Save button (Save As dialog)" HealingAgentBehavior="SameAsCard" sap2010:Annotation.AnnotationText="INTERN TASK: Click Indicate, then click the 'Save' button in the Save As dialog to confirm and save the new workbook under in_FileName." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NClick_4" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000b1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NClick>
             <ui:LogMessage DisplayName="Log Message (workbook created and saved)" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info">
               <ui:LogMessage.Message>
                 <InArgument x:TypeArguments="x:Object">

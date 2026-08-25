@@ -47,7 +47,12 @@
         </InArgument>
       </ui:LogMessage.Message>
     </ui:LogMessage>
-    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (Excel)" HealingAgentBehavior="Job" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000a1" Version="V2" OpenMode="IfNotOpen">
+    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (Excel)" HealingAgentBehavior="Job" sap2010:Annotation.AnnotationText="INTERN TASK: Open this activity's Target/App properties and click Indicate. With Excel already running (launched via EXCEL.EXE), point this at the main Excel application window (the top-level window, title bar area is fine — do not indicate a specific cell or ribbon control here). This is the scope every other activity in this file's Do block runs inside." sap2010:WorkflowViewState.IdRef="NApplicationCard_1" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000a1" Version="V2" OpenMode="IfNotOpen">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
       <uix:NApplicationCard.Body>
         <ActivityAction x:TypeArguments="x:Object">
           <ActivityAction.Argument>

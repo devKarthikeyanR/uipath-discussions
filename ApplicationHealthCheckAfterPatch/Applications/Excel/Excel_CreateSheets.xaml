@@ -40,7 +40,12 @@
         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
       </scg:Dictionary>
     </sap:WorkflowViewStateService.ViewState>
-    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (attach Excel)" HealingAgentBehavior="Job" sap:VirtualizedContainerService.HintSize="451.2,1276.8" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000f1" Version="V2">
+    <uix:NApplicationCard AttachMode="ByInstance" CloseMode="Never" DisplayName="TODO Indicate — Use Application/Browser (attach Excel)" HealingAgentBehavior="Job" sap2010:Annotation.AnnotationText="INTERN TASK: Click Indicate, then point this scope at the already-running Excel application window with a workbook open (title bar/ribbon area is fine). Do not indicate a specific sheet tab here — this is the scope every click step below runs inside." sap:VirtualizedContainerService.HintSize="451.2,1276.8" sap2010:WorkflowViewState.IdRef="NApplicationCard_1" OpenMode="Never" ScopeGuid="e5ce1001-0001-4a11-8a11-0000000000f1" Version="V2">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
       <uix:NApplicationCard.Body>
         <ActivityAction x:TypeArguments="x:Object">
           <ActivityAction.Argument>
@@ -73,7 +78,13 @@
                     <x:Boolean x:Key="IsExpanded">True</x:Boolean>
                   </scg:Dictionary>
                 </sap:WorkflowViewStateService.ViewState>
-                <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click New Sheet (+) button" HealingAgentBehavior="SameAsCard" sap:VirtualizedContainerService.HintSize="350.4,193.6" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000f1" Version="V5" />
+                <uix:NClick ActivateBefore="True" ClickType="Single" DisplayName="TODO Indicate — Click New Sheet (+) button" HealingAgentBehavior="SameAsCard" sap2010:Annotation.AnnotationText="INTERN TASK: Click Indicate, then click the New Sheet '+' button next to the sheet tabs at the bottom-left of the Excel window. This activity runs inside a loop — it will be clicked once per sheet requested (in_SheetCount), so indicating it once here covers every iteration." sap:VirtualizedContainerService.HintSize="350.4,193.6" sap2010:WorkflowViewState.IdRef="NClick_1" InteractionMode="SameAsCard" KeyModifiers="None" MouseButton="Left" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000f1" Version="V5">
+                  <sap:WorkflowViewStateService.ViewState>
+                    <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                      <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                    </scg:Dictionary>
+                  </sap:WorkflowViewStateService.ViewState>
+                </uix:NClick>
                 <Assign DisplayName="Increment SheetsCreated" sap:VirtualizedContainerService.HintSize="350.4,174.4" sap2010:WorkflowViewState.IdRef="Assign_1">
                   <Assign.To>
                     <OutArgument x:TypeArguments="x:Int32">
@@ -89,7 +100,13 @@
               </Sequence>
               </ui:InterruptibleWhile.Body>
             </ui:InterruptibleWhile>
-            <uix:NKeyboardShortcuts ActivateBefore="True" DisplayName="TODO Indicate — Send Ctrl+S (Save)" HealingAgentBehavior="SameAsCard" InteractionMode="HardwareEvents" Shortcuts="[d(hk)][d(ctrl)]s[u(ctrl)][u(hk)]" sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NKeyboardShortcuts_1" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000f1" Version="V5" />
+            <uix:NKeyboardShortcuts ActivateBefore="True" DisplayName="TODO Indicate — Send Ctrl+S (Save)" HealingAgentBehavior="SameAsCard" InteractionMode="HardwareEvents" Shortcuts="[d(hk)][d(ctrl)]s[u(ctrl)][u(hk)]" sap2010:Annotation.AnnotationText="INTERN TASK: Sends Ctrl+S to save the workbook after all requested sheets have been created. Does not need Indicate/a Target — just confirm the workbook is the focused window when it runs." sap:VirtualizedContainerService.HintSize="416,193.6" sap2010:WorkflowViewState.IdRef="NKeyboardShortcuts_1" ScopeIdentifier="e5ce1001-0001-4a11-8a11-0000000000f1" Version="V5">
+              <sap:WorkflowViewStateService.ViewState>
+                <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                  <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+                </scg:Dictionary>
+              </sap:WorkflowViewStateService.ViewState>
+            </uix:NKeyboardShortcuts>
             <ui:LogMessage DisplayName="Log Message (sheets created and saved)" sap:VirtualizedContainerService.HintSize="416,165.6" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info">
               <ui:LogMessage.Message>
                 <InArgument x:TypeArguments="x:Object">
