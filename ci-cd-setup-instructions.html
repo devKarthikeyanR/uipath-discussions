@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UiPath CI/CD Setup Guide — GitHub Actions</title>
+<style>
+  :root{
+    --ink:#1c2321;
+    --paper:#fbfaf7;
+    --panel:#ffffff;
+    --line:#dfdad0;
+    --accent:#2f5d50;
+    --accent-soft:#e7efe9;
+    --code-bg:#1c2321;
+    --code-ink:#e9ecec;
+    --warn-bg:#fbf1e3;
+    --warn-line:#c98a2b;
+    --step-num:#2f5d50;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    line-height:1.6;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:48px 24px 96px;
+  }
+  header.title-block{
+    border-bottom:3px solid var(--ink);
+    padding-bottom:24px;
+    margin-bottom:40px;
+  }
+  header.title-block h1{
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size:2rem;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  header.title-block p{
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    margin:0;
+    color:#5b6360;
+    font-size:1.02rem;
+  }
+  .audience{
+    display:inline-block;
+    margin-top:14px;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size:0.85rem;
+    background:var(--accent-soft);
+    color:var(--accent);
+    padding:5px 12px;
+    border-radius:3px;
+  }
+  h2.stage{
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size:1.3rem;
+    margin:56px 0 6px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+  }
+  h2.stage .n{
+    font-size:1.6rem;
+    color:var(--step-num);
+    font-weight:bold;
+    font-family: Georgia, serif;
+  }
+  h2.stage:first-of-type{margin-top:0;}
+  .stage-intro{
+    color:#4b524f;
+    margin:0 0 20px;
+    font-size:0.98rem;
+  }
+  .substep{
+    margin:22px 0;
+    padding-left:2px;
+  }
+  .substep h3{
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size:1.02rem;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .substep p, .substep li{
+    font-size:0.98rem;
+  }
+  ol.click-path{
+    margin:10px 0 10px 0;
+    padding-left:22px;
+  }
+  ol.click-path li{
+    margin-bottom:8px;
+  }
+  code, .inline-code{
+    font-family: 'SFMono-Regular', Consolas, 'Courier New', monospace;
+    background:var(--accent-soft);
+    color:#1f3d34;
+    padding:2px 6px;
+    border-radius:3px;
+    font-size:0.88em;
+  }
+  pre{
+    background:var(--code-bg);
+    color:var(--code-ink);
+    padding:18px 20px;
+    border-radius:6px;
+    overflow-x:auto;
+    font-family: 'SFMono-Regular', Consolas, 'Courier New', monospace;
+    font-size:0.85rem;
+    line-height:1.55;
+    margin:16px 0;
+  }
+  pre .comment{color:#8fa39b;}
+  .note{
+    background:var(--warn-bg);
+    border-left:4px solid var(--warn-line);
+    padding:14px 18px;
+    margin:16px 0;
+    font-size:0.92rem;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    color:#5c4a20;
+  }
+  .note strong{color:#8a5a12;}
+  .tip{
+    background:var(--accent-soft);
+    border-left:4px solid var(--accent);
+    padding:14px 18px;
+    margin:16px 0;
+    font-size:0.92rem;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    color:#25443b;
+  }
+  .checklist{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:20px 24px;
+    margin:20px 0;
+  }
+  .checklist label{
+    display:block;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size:0.95rem;
+    margin-bottom:10px;
+    cursor:pointer;
+  }
+  .checklist input{margin-right:10px;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0;
+    font-size:0.92rem;
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  }
+  th,td{
+    text-align:left;
+    padding:9px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  th{
+    color:#4b524f;
+    font-weight:600;
+    font-size:0.82rem;
+    text-transform:none;
+  }
+  .glossary{
+    margin-top:64px;
+    border-top:3px solid var(--ink);
+    padding-top:24px;
+  }
+  .glossary h2{
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size:1.3rem;
+    margin-bottom:16px;
+  }
+  .glossary dt{
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-weight:bold;
+    margin-top:14px;
+    color:var(--accent);
+  }
+  .glossary dd{
+    margin:4px 0 0;
+    font-size:0.94rem;
+  }
+  footer{
+    margin-top:64px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    font-size:0.82rem;
+    color:#8a9089;
+  }
+  .path{
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size:0.88em;
+    background:#eee9dd;
+    padding:1px 5px;
+    border-radius:3px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="title-block">
+    <h1>Setting Up CI/CD for UiPath with GitHub Actions</h1>
+    <p>A first-time, step-by-step walkthrough — no prior DevOps experience assumed.</p>
+    <span class="audience">Written for: anyone on the team, including non-developers</span>
+  </header>
+
+  <p>This guide sets up an automatic pipeline that takes your UiPath project from your computer, packages it, and delivers it to Orchestrator — without anyone manually zipping files or clicking "Publish" over and over. You'll do this once, and every future update will follow the same automatic path.</p>
+
+  <div class="tip"><strong>Before you start:</strong> you'll need a GitHub account with access to create repositories, and admin (or at least "can add applications") access to your company's UiPath Orchestrator. If you're not sure you have this, ask your Orchestrator admin before continuing.</div>
+
+  <h2 class="stage"><span class="n">1</span> Put your UiPath project into GitHub</h2>
+  <p class="stage-intro">CI/CD needs your project files stored in a place it can watch for changes. That place is a GitHub repository ("repo").</p>
+
+  <div class="substep">
+    <h3>1.1 Confirm your project has a project.json file</h3>
+    <p>Open your UiPath project folder on your computer. You should see a file called <code>project.json</code> sitting in the main folder, alongside your <code>.xaml</code> files. This file is how UiPath identifies the project — every automated step later depends on it being there.</p>
+  </div>
+
+  <div class="substep">
+    <h3>1.2 Turn on source control inside UiPath Studio</h3>
+    <ol class="click-path">
+      <li>Open your project in UiPath Studio.</li>
+      <li>Go to the <strong>Team</strong> or <strong>Source Control</strong> section (varies slightly by Studio version).</li>
+      <li>Choose <strong>Git</strong> as the source control provider and link it to a new or existing GitHub repository.</li>
+      <li>Commit and push all your files — this uploads them to GitHub.</li>
+    </ol>
+  </div>
+
+  <div class="note"><strong>Don't have a repository yet?</strong> Go to <code>github.com</code> → click the green <strong>New</strong> button → give it a name (e.g. <code>invoice-processing-bot</code>) → click <strong>Create repository</strong>. Then follow step 1.2 to push your files into it.</div>
+
+  <h2 class="stage"><span class="n">2</span> Create a way for GitHub to log into Orchestrator</h2>
+  <p class="stage-intro">GitHub needs permission to talk to your Orchestrator on your behalf. You'll create a dedicated "robot login" for this — you don't reuse a personal password.</p>
+
+  <div class="substep">
+    <h3>2.1 Create an External Application in Orchestrator</h3>
+    <ol class="click-path">
+      <li>Log into Orchestrator as an admin.</li>
+      <li>Go to <strong>Admin</strong> → <strong>External Applications</strong>.</li>
+      <li>Click <strong>Add Application</strong>.</li>
+      <li>Give it a name, e.g. <code>github-actions-cicd</code>.</li>
+      <li>Set the application type to <strong>Confidential application</strong>.</li>
+      <li>Under scopes/permissions, grant access to <strong>Orchestrator API</strong> — specifically the ability to manage packages and deploy to folders.</li>
+      <li>Save. Orchestrator will show you a <strong>Client ID</strong> and a <strong>Client Secret</strong>.</li>
+    </ol>
+  </div>
+
+  <div class="note"><strong>Important:</strong> the Client Secret is only shown once. Copy both values into a temporary note before closing the screen — you'll paste them into GitHub in the next stage.</div>
+
+  <div class="substep">
+    <h3>2.2 Note down three more details</h3>
+    <p>While you're in Orchestrator, also write down:</p>
+    <table>
+      <tr><th>What to find</th><th>Where to find it</th></tr>
+      <tr><td>Orchestrator URL</td><td>The web address you use to log in, e.g. <code>https://cloud.uipath.com</code></td></tr>
+      <tr><td>Organization / Account name</td><td>Shown in the URL after logging in, or under <strong>Admin → Organization Settings</strong></td></tr>
+      <tr><td>Tenant name</td><td>Shown in the tenant switcher at the top of Orchestrator</td></tr>
+    </table>
+  </div>
+
+  <h2 class="stage"><span class="n">3</span> Store your credentials safely in GitHub</h2>
+  <p class="stage-intro">You never type passwords directly into the automation file — instead, they go into GitHub's locked "Secrets" vault, which the automation reads from without ever displaying the values.</p>
+
+  <div class="substep">
+    <ol class="click-path">
+      <li>Open your repository on <strong>github.com</strong>.</li>
+      <li>Click <strong>Settings</strong> (top menu of the repo, not your account).</li>
+      <li>In the left sidebar, click <strong>Secrets and variables</strong> → <strong>Actions</strong>.</li>
+      <li>Click <strong>New repository secret</strong> and add each of the following, one at a time (name exactly as shown, value from step 2):</li>
+    </ol>
+    <table>
+      <tr><th>Secret name</th><th>Value</th></tr>
+      <tr><td><code>UIPATH_URL</code></td><td>Your Orchestrator URL</td></tr>
+      <tr><td><code>UIPATH_TENANT</code></td><td>Your tenant name</td></tr>
+      <tr><td><code>UIPATH_ACCOUNT</code></td><td>Your organization/account name</td></tr>
+      <tr><td><code>UIPATH_CLIENT_ID</code></td><td>Client ID from step 2.1</td></tr>
+      <tr><td><code>UIPATH_CLIENT_SECRET</code></td><td>Client Secret from step 2.1</td></tr>
+    </table>
+  </div>
+
+  <div class="checklist">
+    <label><input type="checkbox"> All 5 secrets added</label>
+    <label><input type="checkbox"> Names match exactly (case-sensitive)</label>
+    <label><input type="checkbox"> No extra spaces pasted into the values</label>
+  </div>
+
+  <h2 class="stage"><span class="n">4</span> Add the automation instructions to your repo</h2>
+  <p class="stage-intro">This is the file that tells GitHub what to do every time someone updates the project: package it and send it to Orchestrator.</p>
+
+  <div class="substep">
+    <h3>4.1 Create the folder structure</h3>
+    <p>In your repository, create a folder named exactly <span class="path">.github/workflows/</span> (the dot at the start matters). Inside it, create a file named <span class="path">ci-cd.yml</span>.</p>
+    <p>Easiest way: on github.com, click <strong>Add file</strong> → <strong>Create new file</strong>, then type <code>.github/workflows/ci-cd.yml</code> as the filename — GitHub creates the folders automatically.</p>
+  </div>
+
+  <div class="substep">
+    <h3>4.2 Paste in this starter pipeline</h3>
+    <p>This version does the simplest useful thing: whenever you push a change to the <code>main</code> branch, it packages the project and deploys it to a "Dev" folder in Orchestrator. Copy this exactly:</p>
+<pre>name: UiPath CI/CD
+
+<span class="comment"># Runs automatically whenever code is pushed to the main branch</span>
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  pack-and-deploy:
+    runs-on: windows-latest
+
+    steps:
+      <span class="comment"># Step 1: download the project files</span>
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      <span class="comment"># Step 2: package the project into a deployable file</span>
+      - name: Pack UiPath project
+        uses: UiPath/package-pack@main
+        with:
+          root: ./
+          destination: ./output
+          version: 1.0.${{ github.run_number }}
+
+      <span class="comment"># Step 3: send the package to Orchestrator's Dev folder</span>
+      - name: Deploy to Orchestrator (Dev)
+        uses: UiPath/package-deploy@main
+        with:
+          package_path: ./output
+          orchestrator_url: ${{ secrets.UIPATH_URL }}
+          orchestrator_tenant: ${{ secrets.UIPATH_TENANT }}
+          orchestrator_account_name: ${{ secrets.UIPATH_ACCOUNT }}
+          orchestrator_application_id: ${{ secrets.UIPATH_CLIENT_ID }}
+          orchestrator_application_secret: ${{ secrets.UIPATH_CLIENT_SECRET }}
+          orchestrator_folder: "Dev"
+</pre>
+    <p>Click <strong>Commit changes</strong> to save it.</p>
+  </div>
+
+  <div class="note"><strong>Before this will work:</strong> make sure a folder literally named <code>Dev</code> already exists in your Orchestrator (Orchestrator → Folders). The pipeline deploys into a folder by name — it won't create one for you.</div>
+
+  <h2 class="stage"><span class="n">5</span> Run it and check the result</h2>
+
+  <div class="substep">
+    <h3>5.1 Trigger the pipeline</h3>
+    <p>Make any small change to a file in your repository (even editing a description) and push it to the <code>main</code> branch, or edit a file directly on github.com and commit. This alone starts the pipeline.</p>
+  </div>
+
+  <div class="substep">
+    <h3>5.2 Watch it run</h3>
+    <ol class="click-path">
+      <li>On your repository page, click the <strong>Actions</strong> tab.</li>
+      <li>You'll see your pipeline run listed with a status icon: a yellow dot (running), green check (success), or red X (failed).</li>
+      <li>Click into the run to see each step and its output — useful for troubleshooting if something fails.</li>
+    </ol>
+  </div>
+
+  <div class="substep">
+    <h3>5.3 Confirm in Orchestrator</h3>
+    <p>Log into Orchestrator, open the <strong>Dev</strong> folder → <strong>Packages</strong>. You should see your project listed with the version number matching the run number from GitHub.</p>
+  </div>
+
+  <div class="tip"><strong>Recommended first test:</strong> try this whole flow with a small, low-risk process before connecting your real production automation — it's much easier to fix a typo in the pipeline file than to debug it against something business-critical.</div>
+
+  <h2 class="stage"><span class="n">6</span> Growing the pipeline (once step 5 works)</h2>
+  <p class="stage-intro">The setup above is intentionally minimal. Once your team is comfortable with it, these are the natural next additions — you don't need to do them all on day one.</p>
+  <table>
+    <tr><th>Addition</th><th>What it does</th></tr>
+    <tr><td>Workflow Analyzer step</td><td>Automatically checks your automation for rule violations before packaging, catching mistakes early.</td></tr>
+    <tr><td>Automated test cases</td><td>Runs UiPath Test Cases against the package before it's allowed to move forward.</td></tr>
+    <tr><td>Test → Prod stages</td><td>Adds separate deployment steps for a Test folder, then a Production folder.</td></tr>
+    <tr><td>Manual approval gate</td><td>Uses GitHub "Environments" to require a human to click approve before anything reaches Production.</td></tr>
+  </table>
+
+  <div class="glossary">
+    <h2>Plain-language glossary</h2>
+    <dl>
+      <dt>Repository (repo)</dt>
+      <dd>A project's folder on GitHub, including its full history of changes.</dd>
+      <dt>CI/CD</dt>
+      <dd>Short for Continuous Integration / Continuous Deployment — shorthand for "automatically test and deliver changes" instead of doing it by hand.</dd>
+      <dt>Pipeline / Workflow</dt>
+      <dd>The list of automated steps (in the <code>ci-cd.yml</code> file) that GitHub runs for you.</dd>
+      <dt>Secret</dt>
+      <dd>A password or key stored securely in GitHub, hidden from view even from people who can see the repo's code.</dd>
+      <dt>Orchestrator</dt>
+      <dd>UiPath's server that stores, schedules, and runs your automations.</dd>
+      <dt>Package (.nupkg)</dt>
+      <dd>A zipped, versioned bundle of your automation that Orchestrator can install and run.</dd>
+      <dt>Folder (in Orchestrator)</dt>
+      <dd>A workspace inside Orchestrator, typically one per environment (e.g. Dev, Test, Prod).</dd>
+    </dl>
+  </div>
+
+  <footer>
+    Written as an internal setup guide. Test each stage with a low-risk process before relying on this pipeline for production automations.
+  </footer>
+
+</div>
+</body>
+</html>
